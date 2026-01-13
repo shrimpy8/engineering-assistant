@@ -2,11 +2,20 @@
 
 A **local-first AI assistant** that helps developers understand codebases through transparent, secure, and well-designed tooling.
 
-**100% Private** - Runs entirely on your machine using Ollama. No data leaves your computer.
-
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Node](https://img.shields.io/badge/node-18%2B-green.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)
+
+## Why This Project?
+
+**The Model Context Protocol (MCP)** is an open standard that defines how AI models interact with external tools and data sources. Instead of proprietary integrations, MCP provides a universal interface—like USB for AI tools. Any MCP-compatible tool works with any MCP-compatible AI system.
+
+This project demonstrates MCP's flexibility by providing **two ways to use the same tools**:
+
+1. **Web App Mode** - A complete local UI powered by Ollama. 100% private, no data leaves your machine.
+2. **MCP Server Mode** - Connect the same tools to Claude Code, Cursor, or any MCP-compatible AI assistant for more powerful reasoning.
+
+Same sandboxed, read-only file access. Same security guarantees. Your choice of interface and LLM.
 
 ## Screenshots
 
@@ -24,6 +33,11 @@ Configure your repository path, select models, and adjust LLM parameters.
 Visual architecture documentation explaining the data flow and key concepts.
 
 ![How It Works](screenshots/HowItWorks.png)
+
+### Two Ways to Run
+Use the local web app with Ollama, or connect the MCP server to Claude Code for enhanced reasoning.
+
+![Two Ways to Run](screenshots/TwoWaysToRun.png)
 
 ## Features
 
@@ -181,7 +195,7 @@ This eliminates the need to "warm up" with a structure question - you can ask "E
 
 ## Claude Code Integration
 
-The MCP server can also be used with [Claude Code](https://claude.ai/code) for a more powerful LLM experience.
+Because this project implements MCP, the same tools that power the web app can be used with any MCP-compatible AI assistant. [Claude Code](https://claude.ai/code) is Anthropic's CLI tool that supports MCP servers out of the box.
 
 ### Two Modes of Operation
 
