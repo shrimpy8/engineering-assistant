@@ -91,7 +91,7 @@ export function SettingsPanel({
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)]">
-          <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
+          <h2 className="text-lg font-bold text-[var(--color-text-primary)]">
             Settings
           </h2>
           <button
@@ -143,7 +143,7 @@ export function SettingsPanel({
 
           {/* Temperature */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-[var(--color-text-secondary)]">
+            <label className="text-sm font-semibold text-[var(--color-text-secondary)]">
               Temperature: {settings.temperature?.toFixed(1) ?? 0.7}
             </label>
             <input
@@ -155,14 +155,14 @@ export function SettingsPanel({
               onChange={(e) => onUpdateSettings({ temperature: parseFloat(e.target.value) })}
               className="w-full accent-[var(--color-accent)]"
             />
-            <p className="text-xs text-[var(--color-text-tertiary)]">
+            <p className="text-xs font-medium text-[var(--color-text-tertiary)]">
               Lower = more focused, Higher = more creative
             </p>
           </div>
 
           {/* Max Tokens */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-[var(--color-text-secondary)]">
+            <label className="text-sm font-semibold text-[var(--color-text-secondary)]">
               Max Response Length
             </label>
             <select
@@ -184,7 +184,7 @@ export function SettingsPanel({
               <option value={2048}>Very Long (2048 tokens)</option>
               <option value={4096}>Maximum (4096 tokens)</option>
             </select>
-            <p className="text-xs text-[var(--color-text-tertiary)]">
+            <p className="text-xs font-medium text-[var(--color-text-tertiary)]">
               Maximum length of each response
             </p>
           </div>

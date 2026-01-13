@@ -54,16 +54,16 @@ export function ErrorDisplay({
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-semibold text-[var(--color-error)]">
+          <h3 className="text-sm font-bold text-[var(--color-error)]">
             {details.title}
           </h3>
-          <p className="text-sm text-[var(--color-text-primary)] mt-1">
+          <p className="text-sm font-medium text-[var(--color-text-primary)] mt-1">
             {details.message}
           </p>
 
           {/* Suggestion */}
           {details.suggestion && (
-            <p className="text-sm text-[var(--color-text-secondary)] mt-2">
+            <p className="text-sm font-medium text-[var(--color-text-secondary)] mt-2">
               {details.suggestion}
             </p>
           )}
@@ -71,10 +71,10 @@ export function ErrorDisplay({
           {/* Steps */}
           {details.steps && details.steps.length > 0 && (
             <div className="mt-3">
-              <p className="text-xs font-medium text-[var(--color-text-secondary)] mb-2">
+              <p className="text-xs font-semibold text-[var(--color-text-secondary)] mb-2">
                 How to fix:
               </p>
-              <ol className="text-xs text-[var(--color-text-secondary)] space-y-1 list-decimal list-inside">
+              <ol className="text-xs font-medium text-[var(--color-text-secondary)] space-y-1 list-decimal list-inside">
                 {details.steps.map((step, i) => (
                   <li key={i}>{step}</li>
                 ))}

@@ -122,7 +122,7 @@ export function ChatContainer() {
               <span className="font-bold text-[var(--color-text-primary)] leading-tight">
                 Engineering Assistant
               </span>
-              <span className="text-[10px] text-[var(--color-text-tertiary)] leading-tight">
+              <span className="text-[10px] font-medium text-[var(--color-text-tertiary)] leading-tight">
                 Local AI Code Explorer
               </span>
             </div>
@@ -165,7 +165,7 @@ export function ChatContainer() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span className="text-sm hidden lg:inline">How it Works</span>
+            <span className="text-sm font-medium hidden lg:inline">How it Works</span>
           </Link>
 
           <PerformanceBadge latencyMs={latencyMs ?? undefined} toolDurationMs={toolDurationMs ?? undefined} />
@@ -195,7 +195,7 @@ export function ChatContainer() {
                 d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
               />
             </svg>
-            <span className="text-sm hidden xl:inline">Tool Trace</span>
+            <span className="text-sm font-medium hidden xl:inline">Tool Trace</span>
           </button>
 
           {/* Prompt transparency toggle */}
@@ -224,7 +224,7 @@ export function ChatContainer() {
                 d="M7 8h10M7 12h10M7 16h6"
               />
             </svg>
-            <span className="text-sm hidden xl:inline">Prompt</span>
+            <span className="text-sm font-medium hidden xl:inline">Prompt</span>
           </button>
 
           {/* Tool Trace toggle (mobile) */}
@@ -327,7 +327,7 @@ export function ChatContainer() {
                 <svg className="w-5 h-5 text-[var(--color-accent)] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <p className="text-sm text-[var(--color-text-primary)]">
+                <p className="text-sm font-medium text-[var(--color-text-primary)]">
                   Select a repository to start exploring code
                 </p>
                 <button
@@ -354,7 +354,7 @@ export function ChatContainer() {
 
           {repoPathError && (
             <div className="p-4 border-b border-[var(--color-border)] bg-[var(--color-warning)]/10">
-              <p className="text-sm text-[var(--color-text-primary)]">
+              <p className="text-sm font-medium text-[var(--color-text-primary)]">
                 Saved repository path is invalid. Please update it in settings.
               </p>
               <button
@@ -370,7 +370,7 @@ export function ChatContainer() {
           {isPromptOpen && (
             <div className="p-4 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
+                <h3 className="text-sm font-bold text-[var(--color-text-primary)]">
                   System Prompt (Read‑only)
                 </h3>
                 <button

@@ -44,7 +44,7 @@ export function SampleRepoSuggestions({ onSelectPath, compact = false }: SampleR
           <span className="text-xs font-semibold text-[var(--color-text-primary)]">
             Quick Switch
           </span>
-          <span className="text-[10px] text-[var(--color-text-tertiary)]">
+          <span className="text-[10px] font-medium text-[var(--color-text-tertiary)]">
             (click to change path)
           </span>
         </div>
@@ -64,13 +64,13 @@ export function SampleRepoSuggestions({ onSelectPath, compact = false }: SampleR
               <span className="text-lg group-hover:scale-110 transition-transform">
                 {suggestion.icon}
               </span>
-              <span className="text-[10px] text-[var(--color-text-secondary)]">
+              <span className="text-[10px] font-medium text-[var(--color-text-secondary)]">
                 {suggestion.label}
               </span>
             </button>
           ))}
         </div>
-        <p className="text-[10px] text-[var(--color-text-tertiary)]">
+        <p className="text-[10px] font-medium text-[var(--color-text-tertiary)]">
           Replace &quot;yourname&quot; in path with your macOS username
         </p>
       </div>
@@ -88,10 +88,10 @@ export function SampleRepoSuggestions({ onSelectPath, compact = false }: SampleR
           </svg>
         </div>
         <div>
-          <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+          <p className="text-sm font-bold text-[var(--color-text-primary)]">
             Quick Start
           </p>
-          <p className="text-xs text-[var(--color-text-tertiary)]">
+          <p className="text-xs font-medium text-[var(--color-text-tertiary)]">
             Click a folder to set it as your repository path
           </p>
         </div>
@@ -115,7 +115,7 @@ export function SampleRepoSuggestions({ onSelectPath, compact = false }: SampleR
             <span className="text-2xl group-hover:scale-110 transition-transform">
               {suggestion.icon}
             </span>
-            <span className="text-xs font-medium text-[var(--color-text-primary)]">
+            <span className="text-xs font-semibold text-[var(--color-text-primary)]">
               {suggestion.label}
             </span>
           </button>
@@ -123,7 +123,7 @@ export function SampleRepoSuggestions({ onSelectPath, compact = false }: SampleR
       </div>
 
       {/* Help text */}
-      <p className="mt-3 text-[10px] text-[var(--color-text-tertiary)] text-center">
+      <p className="mt-3 text-[10px] font-medium text-[var(--color-text-tertiary)] text-center">
         Replace &quot;yourname&quot; with your macOS username, or use Settings to browse for any folder
       </p>
     </div>

@@ -30,7 +30,7 @@ export function ToolTracePanel({ events, isOpen = true, onClose }: ToolTracePane
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)]">
-        <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">
+        <h2 className="text-sm font-bold text-[var(--color-text-primary)]">
           Tool Activity
         </h2>
         {onClose && (
@@ -70,10 +70,10 @@ export function ToolTracePanel({ events, isOpen = true, onClose }: ToolTracePane
                 />
               </svg>
             </div>
-            <p className="text-sm text-[var(--color-text-tertiary)]">
+            <p className="text-sm font-medium text-[var(--color-text-tertiary)]">
               No tool activity yet
             </p>
-            <p className="text-xs text-[var(--color-text-tertiary)] mt-1">
+            <p className="text-xs font-medium text-[var(--color-text-tertiary)] mt-1">
               Tool calls will appear here
             </p>
           </div>
@@ -86,7 +86,7 @@ export function ToolTracePanel({ events, isOpen = true, onClose }: ToolTracePane
 
       {/* Footer with count */}
       {events.length > 0 && (
-        <div className="p-3 border-t border-[var(--color-border)] text-xs text-[var(--color-text-tertiary)]">
+        <div className="p-3 border-t border-[var(--color-border)] text-xs font-medium text-[var(--color-text-tertiary)]">
           {events.length} tool call{events.length !== 1 ? 's' : ''}
         </div>
       )}

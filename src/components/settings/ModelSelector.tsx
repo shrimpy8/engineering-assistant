@@ -38,7 +38,7 @@ export function ModelSelector({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <label className="text-sm font-medium text-[var(--color-text-secondary)]">
+        <label className="text-sm font-semibold text-[var(--color-text-secondary)]">
           Model
         </label>
         <div className="flex items-center gap-2">
@@ -65,7 +65,7 @@ export function ModelSelector({
 
       {error ? (
         <div className="p-3 rounded-[var(--radius-md)] bg-[var(--color-error)]/10 border border-[var(--color-error)]/20">
-          <p className="text-sm text-[var(--color-error)]">{error}</p>
+          <p className="text-sm font-medium text-[var(--color-error)]">{error}</p>
           {onRefresh && (
             <button
               onClick={onRefresh}
@@ -78,17 +78,17 @@ export function ModelSelector({
       ) : isLoading ? (
         <div className="flex items-center gap-2 p-3">
           <Spinner size="sm" />
-          <span className="text-sm text-[var(--color-text-secondary)]">
+          <span className="text-sm font-medium text-[var(--color-text-secondary)]">
             Loading models...
           </span>
         </div>
       ) : models.length === 0 ? (
         <div className="p-3 rounded-[var(--radius-md)] bg-[var(--color-warning)]/10 border border-[var(--color-warning)]/20">
-          <p className="text-sm text-[var(--color-text-primary)]">No tool-compatible models found</p>
-          <p className="text-xs text-[var(--color-text-secondary)] mt-1">
+          <p className="text-sm font-medium text-[var(--color-text-primary)]">No tool-compatible models found</p>
+          <p className="text-xs font-medium text-[var(--color-text-secondary)] mt-1">
             Pull a compatible model: <code className="font-mono">ollama pull llama3.1:8b</code>
           </p>
-          <p className="text-xs text-[var(--color-text-tertiary)] mt-1">
+          <p className="text-xs font-medium text-[var(--color-text-tertiary)] mt-1">
             Supported: llama3.1, llama3.2, mistral
           </p>
         </div>
@@ -115,12 +115,12 @@ export function ModelSelector({
       )}
 
       {pullStatus && (
-        <p className="text-xs text-[var(--color-text-tertiary)]">
+        <p className="text-xs font-medium text-[var(--color-text-tertiary)]">
           {pullStatus}
         </p>
       )}
 
-      <p className="text-xs text-[var(--color-text-tertiary)]">
+      <p className="text-xs font-medium text-[var(--color-text-tertiary)]">
         Only showing models that support tool calling (llama3.1, llama3.2, mistral)
       </p>
     </div>

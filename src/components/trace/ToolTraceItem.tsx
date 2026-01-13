@@ -110,11 +110,11 @@ export function ToolTraceItem({ event }: ToolTraceItemProps) {
         <ToolIcon tool={event.tool} />
 
         <div className="flex-1 min-w-0">
-          <span className="font-mono text-sm text-[var(--color-text-primary)]">
+          <span className="font-mono text-sm font-semibold text-[var(--color-text-primary)]">
             {event.tool}
           </span>
           {event.duration_ms && (
-            <span className="ml-2 text-xs text-[var(--color-text-tertiary)]">
+            <span className="ml-2 text-xs font-medium text-[var(--color-text-tertiary)]">
               {event.duration_ms}ms
             </span>
           )}
@@ -135,14 +135,14 @@ export function ToolTraceItem({ event }: ToolTraceItemProps) {
       {isExpanded && (
         <div className="border-t border-[var(--color-border)] p-3 space-y-3 bg-[var(--color-bg-secondary)]">
           {/* Timestamp */}
-          <div className="text-xs text-[var(--color-text-tertiary)]">
+          <div className="text-xs font-medium text-[var(--color-text-tertiary)]">
             {time}
           </div>
 
           {/* Arguments */}
           {event.arguments && Object.keys(event.arguments).length > 0 && (
             <div>
-              <span className="text-xs font-medium text-[var(--color-text-secondary)] block mb-1">
+              <span className="text-xs font-semibold text-[var(--color-text-secondary)] block mb-1">
                 Arguments
               </span>
               <pre className="text-xs font-mono bg-[var(--color-bg-primary)] p-2 rounded overflow-x-auto">
@@ -154,7 +154,7 @@ export function ToolTraceItem({ event }: ToolTraceItemProps) {
           {/* Result */}
           {event.status === 'completed' && event.result !== undefined && (
             <div>
-              <span className="text-xs font-medium text-[var(--color-text-secondary)] block mb-1">
+              <span className="text-xs font-semibold text-[var(--color-text-secondary)] block mb-1">
                 Result
               </span>
               <pre className="text-xs font-mono bg-[var(--color-bg-primary)] p-2 rounded overflow-x-auto max-h-40 overflow-y-auto">
@@ -166,10 +166,10 @@ export function ToolTraceItem({ event }: ToolTraceItemProps) {
           {/* Error */}
           {event.status === 'error' && event.error && (
             <div>
-              <span className="text-xs font-medium text-[var(--color-error)] block mb-1">
+              <span className="text-xs font-semibold text-[var(--color-error)] block mb-1">
                 Error: {event.error.code}
               </span>
-              <p className="text-xs text-[var(--color-text-secondary)]">
+              <p className="text-xs font-medium text-[var(--color-text-secondary)]">
                 {event.error.message}
               </p>
             </div>

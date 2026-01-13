@@ -214,13 +214,13 @@ export function RepoPathInput({
             <svg className="w-4 h-4 text-[var(--color-accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-            <span className="text-sm font-medium text-[var(--color-text-primary)]">
+            <span className="text-sm font-semibold text-[var(--color-text-primary)]">
               Selected: <span className="text-[var(--color-accent)]">{selectedFolderName}</span>
             </span>
           </div>
 
           {/* Clickable path suggestions */}
-          <p className="text-xs text-[var(--color-text-secondary)] mb-2">
+          <p className="text-xs font-medium text-[var(--color-text-secondary)] mb-2">
             Click a likely path or paste the exact path below:
           </p>
           <div className="grid grid-cols-1 gap-1.5 mb-3">
@@ -256,7 +256,7 @@ export function RepoPathInput({
               Path not listed? Copy from Finder...
             </summary>
             <div className="mt-2 p-2 rounded bg-[var(--color-bg-primary)] border border-[var(--color-border)]">
-              <p className="text-[var(--color-text-secondary)] mb-1">
+              <p className="font-medium text-[var(--color-text-secondary)] mb-1">
                 In Finder, select the folder and press:
               </p>
               <div className="flex items-center gap-1">
@@ -346,15 +346,15 @@ export function RepoPathInput({
       {/* Help content */}
       {showHelp && !selectedFolderName && (
         <div className="p-3 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-xs space-y-2">
-          <p className="font-medium text-[var(--color-text-primary)]">Option 1: Keyboard shortcut</p>
-          <ol className="list-decimal list-inside text-[var(--color-text-secondary)] space-y-1 ml-2">
+          <p className="font-semibold text-[var(--color-text-primary)]">Option 1: Keyboard shortcut</p>
+          <ol className="list-decimal list-inside font-medium text-[var(--color-text-secondary)] space-y-1 ml-2">
             <li>Open Finder and navigate to your project folder</li>
             <li>Select the folder (single click)</li>
             <li>Press <kbd className="px-1 py-0.5 bg-[var(--color-bg-tertiary)] rounded text-[10px]">⌥⌘C</kbd> (Option+Cmd+C)</li>
             <li>Paste here with <kbd className="px-1 py-0.5 bg-[var(--color-bg-tertiary)] rounded text-[10px]">⌘V</kbd></li>
           </ol>
-          <p className="font-medium text-[var(--color-text-primary)] mt-3">Option 2: Drag from Terminal</p>
-          <ol className="list-decimal list-inside text-[var(--color-text-secondary)] space-y-1 ml-2">
+          <p className="font-semibold text-[var(--color-text-primary)] mt-3">Option 2: Drag from Terminal</p>
+          <ol className="list-decimal list-inside font-medium text-[var(--color-text-secondary)] space-y-1 ml-2">
             <li>Open Terminal</li>
             <li>Drag folder from Finder into Terminal</li>
             <li>Copy the path that appears</li>
@@ -363,7 +363,7 @@ export function RepoPathInput({
       )}
 
       {!showHelp && !selectedFolderName && (
-        <p className="text-xs text-[var(--color-text-tertiary)]">
+        <p className="text-xs font-medium text-[var(--color-text-tertiary)]">
           Enter the absolute path to the repository you want to analyze
         </p>
       )}

@@ -79,7 +79,7 @@ export const MessageBubble = memo(function MessageBubble({ message }: MessageBub
         {message.toolCalls && message.toolCalls.length > 0 && (
           <div className="mt-2 pt-2 border-t border-[var(--color-border)]">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-[var(--color-text-tertiary)]">
+              <span className="text-xs font-medium text-[var(--color-text-tertiary)]">
                 Used {message.toolCalls.length} tool
                 {message.toolCalls.length !== 1 ? 's' : ''}: {' '}
                 {message.toolCalls.map((tc) => tc.name).join(', ')}
@@ -99,10 +99,10 @@ export const MessageBubble = memo(function MessageBubble({ message }: MessageBub
         {/* Why this result panel */}
         {showWhy && message.toolCalls && message.toolCalls.length > 0 && (
           <div className="mt-3 p-3 rounded-[var(--radius-md)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
-            <p className="text-xs font-medium text-[var(--color-text-secondary)] mb-2">
+            <p className="text-xs font-semibold text-[var(--color-text-secondary)] mb-2">
               This answer used:
             </p>
-            <ul className="text-xs text-[var(--color-text-secondary)] space-y-1">
+            <ul className="text-xs font-medium text-[var(--color-text-secondary)] space-y-1">
               {message.toolCalls.map((tc) => (
                 <li key={tc.id}>
                   <span className="font-mono">{tc.name}</span>
@@ -134,7 +134,7 @@ export const MessageBubble = memo(function MessageBubble({ message }: MessageBub
       </div>
 
       {/* Timestamp */}
-      <span className="text-xs text-[var(--color-text-tertiary)] px-1">
+      <span className="text-xs font-medium text-[var(--color-text-tertiary)] px-1">
         {time}
       </span>
     </div>

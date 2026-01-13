@@ -73,7 +73,7 @@ export function SuggestedQuestions({
             `}
           >
             <span>{item.icon}</span>
-            <span className="text-[var(--color-text-secondary)]">
+            <span className="font-medium text-[var(--color-text-secondary)]">
               {item.label}
             </span>
           </button>
@@ -86,10 +86,10 @@ export function SuggestedQuestions({
   return (
     <div className="flex flex-col items-center justify-center py-8 px-4">
       <div className="text-center mb-6">
-        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
+        <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-2">
           Get started with a question
         </h3>
-        <p className="text-sm text-[var(--color-text-secondary)]">
+        <p className="text-sm font-medium text-[var(--color-text-secondary)]">
           Click a suggestion below or type your own question
         </p>
       </div>
@@ -113,7 +113,7 @@ export function SuggestedQuestions({
             `}
           >
             <span className="text-xl flex-shrink-0 group-hover:scale-110 transition-transform">{item.icon}</span>
-            <span className="text-sm font-medium text-[var(--color-text-primary)] line-clamp-2">
+            <span className="text-sm font-semibold text-[var(--color-text-primary)] line-clamp-2">
               {item.label}
             </span>
           </button>
