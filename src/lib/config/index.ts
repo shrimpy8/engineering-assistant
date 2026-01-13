@@ -56,7 +56,7 @@ const ConfigSchema = z.object({
     .number()
     .min(1000)
     .max(300000)
-    .default(60000),
+    .default(90000),
   ollamaMaxRetries: z.coerce
     .number()
     .min(0)
@@ -101,8 +101,8 @@ const ConfigSchema = z.object({
   searchTimeoutMs: z.coerce
     .number()
     .min(1000)
-    .max(60000)
-    .default(10000),
+    .max(120000)
+    .default(30000),
 
   // Feature Flags
   enableToolTrace: envBoolean.default(true),
