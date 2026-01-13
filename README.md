@@ -8,6 +8,23 @@ A **local-first AI assistant** that helps developers understand codebases throug
 ![Node](https://img.shields.io/badge/node-18%2B-green.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)
 
+## Screenshots
+
+### Chat Interface with Tool Trace
+Ask questions about any codebase and see exactly which files the AI reads in the Tool Trace panel.
+
+![Chat with Tool Calling](screenshots/CodeRepository_Response_ToolCalling.png)
+
+### Settings Panel
+Configure your repository path, select models, and adjust LLM parameters.
+
+![Settings](screenshots/Settings.png)
+
+### How It Works
+Visual architecture documentation explaining the data flow and key concepts.
+
+![How It Works](screenshots/HowItWorks.png)
+
 ## Features
 
 - **Chat with AI** about any codebase using local Ollama models

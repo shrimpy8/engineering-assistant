@@ -323,15 +323,13 @@ export function ChatContainer() {
           {/* Repository path required banner */}
           {!settings.repo_path && (
             <div className="px-4 py-3 border-b border-[var(--color-border)] bg-gradient-to-r from-[var(--color-accent)]/10 to-purple-500/10">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-[var(--color-accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <p className="text-sm text-[var(--color-text-primary)]">
-                    Select a repository to start exploring code
-                  </p>
-                </div>
+              <div className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-[var(--color-accent)] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-sm text-[var(--color-text-primary)]">
+                  Select a repository to start exploring code
+                </p>
                 <button
                   onClick={() => setIsSettingsOpen(true)}
                   className="px-3 py-1.5 text-sm font-medium text-white bg-[var(--color-accent)] rounded-[var(--radius-md)] hover:bg-[var(--color-accent-hover)] transition-colors"
