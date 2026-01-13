@@ -219,6 +219,7 @@ export interface PromptBuilderOptions {
   repoPath?: string;
   toolMode?: 'auto' | 'manual';
   additionalContext?: string;
+  repoOverview?: string;
 }
 
 /**
@@ -228,11 +229,13 @@ export class PromptBuilder {
   private repoPath?: string;
   private toolMode: 'auto' | 'manual';
   private additionalContext?: string;
+  private repoOverview?: string;
 
   constructor(options: PromptBuilderOptions = {}) {
     this.repoPath = options.repoPath;
     this.toolMode = options.toolMode || 'auto';
     this.additionalContext = options.additionalContext;
+    this.repoOverview = options.repoOverview;
   }
 
   /**
@@ -247,6 +250,11 @@ export class PromptBuilder {
     // Add repo context if available
     if (this.repoPath) {
       parts.push(`## Current Repository\n\nYou are analyzing: \`${this.repoPath}\``);
+
+      // Include pre-fetched repo overview for context
+      if (this.repoOverview) {
+        parts.push(`## Repository Structure (Pre-loaded)\n\nHere is the repository structure you already know about. Use this to inform your tool calls - you don't need to call get_repo_overview again unless the user specifically asks for structure.\n\n${this.repoOverview}`);
+      }
     }
 
     // Add tool mode instructions
@@ -310,6 +318,13 @@ If you need information, suggest which tool to use and let the user confirm.`);
    */
   setToolMode(mode: 'auto' | 'manual'): void {
     this.toolMode = mode;
+  }
+
+  /**
+   * Set pre-fetched repo overview for context injection
+   */
+  setRepoOverview(overview: string): void {
+    this.repoOverview = overview;
   }
 }
 

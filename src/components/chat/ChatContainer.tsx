@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useChat } from '@/hooks/useChat';
 import { useSettings } from '@/hooks/useSettings';
 import { MessageList } from './MessageList';
@@ -8,7 +9,7 @@ import { ChatInput } from './ChatInput';
 import { SuggestedQuestions } from './SuggestedQuestions';
 import { ToolTracePanel, ToolTraceSheet } from '@/components/trace';
 import { SettingsPanel } from '@/components/settings';
-import { ErrorDisplay, SafetyBanner, PerformanceBadge, SampleRepoSuggestions } from '@/components/ui';
+import { ErrorDisplay, SafetyBanner, PerformanceBadge } from '@/components/ui';
 
 /**
  * Main chat container with header, messages, input, and sidebars
@@ -155,6 +156,18 @@ export function ChatContainer() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* How it Works link */}
+          <Link
+            href="/how-it-works"
+            className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-[var(--radius-md)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+            title="How it Works"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-sm hidden lg:inline">How it Works</span>
+          </Link>
+
           <PerformanceBadge latencyMs={latencyMs ?? undefined} toolDurationMs={toolDurationMs ?? undefined} />
           {/* Tool Trace toggle (desktop) */}
           <button
@@ -307,6 +320,28 @@ export function ChatContainer() {
           {/* Safety Banner (one-time) */}
           <SafetyBanner />
 
+          {/* Repository path required banner */}
+          {!settings.repo_path && (
+            <div className="px-4 py-3 border-b border-[var(--color-border)] bg-gradient-to-r from-[var(--color-accent)]/10 to-purple-500/10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-[var(--color-accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className="text-sm text-[var(--color-text-primary)]">
+                    Select a repository to start exploring code
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsSettingsOpen(true)}
+                  className="px-3 py-1.5 text-sm font-medium text-white bg-[var(--color-accent)] rounded-[var(--radius-md)] hover:bg-[var(--color-accent-hover)] transition-colors"
+                >
+                  Open Settings
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Error display */}
           {error && (
             <div className="p-4 border-b border-[var(--color-border)]">
@@ -372,26 +407,6 @@ export function ChatContainer() {
 
           {/* Input area */}
           <div className="p-4 border-t border-[var(--color-border)] bg-[var(--color-bg-primary)]">
-            {!settings.repo_path && (
-              <div className="mb-3 p-3 rounded-[var(--radius-md)] bg-[var(--color-warning)]/10 border border-[var(--color-warning)]/20">
-                <p className="text-sm text-[var(--color-text-primary)]">
-                  Please configure a repository path to start analyzing code.
-                </p>
-                <button
-                  onClick={() => setIsSettingsOpen(true)}
-                  className="text-sm text-[var(--color-accent)] hover:underline mt-1"
-                >
-                  Open Settings
-                </button>
-              </div>
-            )}
-            {!settings.repo_path && (
-              <div className="mb-3">
-                <SampleRepoSuggestions
-                  onSelectPath={(path) => updateSettings({ repo_path: path })}
-                />
-              </div>
-            )}
             {/* Compact suggested questions above input (when messages exist) */}
             {messages.length > 0 && settings.repo_path && (
               <div className="mb-3">

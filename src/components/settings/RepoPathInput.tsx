@@ -207,7 +207,7 @@ export function RepoPathInput({
         )}
       </div>
 
-      {/* Selected folder indicator */}
+      {/* Selected folder indicator with clickable path suggestions */}
       {selectedFolderName && (
         <div className="p-3 rounded-lg bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30">
           <div className="flex items-center gap-2 mb-2">
@@ -218,28 +218,57 @@ export function RepoPathInput({
               Selected: <span className="text-[var(--color-accent)]">{selectedFolderName}</span>
             </span>
           </div>
+
+          {/* Clickable path suggestions */}
           <p className="text-xs text-[var(--color-text-secondary)] mb-2">
-            Browsers can&apos;t access the full path for security. Copy it from Finder:
+            Click a likely path or paste the exact path below:
           </p>
-          <div className="flex items-center gap-2 p-2 rounded bg-[var(--color-bg-primary)] border border-[var(--color-border)]">
-            <kbd className="px-2 py-1 text-xs font-mono bg-[var(--color-bg-tertiary)] rounded border border-[var(--color-border)]">
-              ⌥ Option
-            </kbd>
-            <span className="text-xs text-[var(--color-text-tertiary)]">+</span>
-            <kbd className="px-2 py-1 text-xs font-mono bg-[var(--color-bg-tertiary)] rounded border border-[var(--color-border)]">
-              ⌘ Cmd
-            </kbd>
-            <span className="text-xs text-[var(--color-text-tertiary)]">+</span>
-            <kbd className="px-2 py-1 text-xs font-mono bg-[var(--color-bg-tertiary)] rounded border border-[var(--color-border)]">
-              C
-            </kbd>
-            <span className="text-xs text-[var(--color-text-secondary)] ml-2">
-              Copy path in Finder
-            </span>
+          <div className="grid grid-cols-1 gap-1.5 mb-3">
+            {(() => {
+              // Try to detect username from any previously entered path
+              const prevMatch = value.match(/^\/Users\/([^/]+)/);
+              const username = prevMatch?.[1] || 'yourname';
+              return [
+                `/Users/${username}/Documents/GitHub/${selectedFolderName}`,
+                `/Users/${username}/Documents/${selectedFolderName}`,
+                `/Users/${username}/Desktop/${selectedFolderName}`,
+                `/Users/${username}/Downloads/${selectedFolderName}`,
+              ];
+            })().map((suggestedPath) => (
+              <button
+                key={suggestedPath}
+                type="button"
+                onClick={() => {
+                  setLocalValue(suggestedPath);
+                  setSelectedFolderName(null);
+                  validateAndSave(suggestedPath);
+                }}
+                className="text-left px-2 py-1.5 text-xs font-mono rounded bg-[var(--color-bg-primary)] border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:bg-[var(--color-bg-secondary)] transition-colors truncate"
+              >
+                {suggestedPath}
+              </button>
+            ))}
           </div>
-          <p className="text-xs text-[var(--color-text-tertiary)] mt-2">
-            Select the folder in Finder, press the shortcut above, then paste below (⌘V)
-          </p>
+
+          {/* Manual copy instructions (collapsed) */}
+          <details className="text-xs">
+            <summary className="cursor-pointer text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]">
+              Path not listed? Copy from Finder...
+            </summary>
+            <div className="mt-2 p-2 rounded bg-[var(--color-bg-primary)] border border-[var(--color-border)]">
+              <p className="text-[var(--color-text-secondary)] mb-1">
+                In Finder, select the folder and press:
+              </p>
+              <div className="flex items-center gap-1">
+                <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-[var(--color-bg-tertiary)] rounded border border-[var(--color-border)]">
+                  ⌥⌘C
+                </kbd>
+                <span className="text-[var(--color-text-tertiary)]">
+                  then paste here with ⌘V
+                </span>
+              </div>
+            </div>
+          </details>
         </div>
       )}
 

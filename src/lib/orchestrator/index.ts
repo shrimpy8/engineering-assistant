@@ -111,7 +111,7 @@ export class Orchestrator {
   }
 
   /**
-   * Initialize MCP connection
+   * Initialize MCP connection and pre-fetch repo overview
    */
   async initialize(): Promise<void> {
     if (!this.config.repoPath) {
@@ -126,12 +126,48 @@ export class Orchestrator {
         { repoPath: this.config.repoPath },
         'Orchestrator initialized with MCP client'
       );
+
+      // Pre-fetch repo overview to inject into system prompt
+      // This ensures the model knows the project structure before any questions
+      await this.prefetchRepoOverview();
     } catch (error) {
       logger.error(
         { error: error instanceof Error ? error.message : 'Unknown' },
         'Failed to initialize MCP client'
       );
       // Continue without MCP - chat will work but tools won't
+    }
+  }
+
+  /**
+   * Pre-fetch repository overview and inject into prompt context
+   * This ensures the model knows the project structure before the first question
+   */
+  private async prefetchRepoOverview(): Promise<void> {
+    if (!this.mcpClient) return;
+
+    try {
+      logger.info({}, 'Pre-fetching repo overview for context injection');
+      const result = await this.mcpClient.callTool('get_repo_overview', {
+        max_depth: 3,
+        include_stats: true,
+      });
+
+      if (result && typeof result === 'object') {
+        // Format the overview for the system prompt
+        const overview = JSON.stringify(result, null, 2);
+        this.promptBuilder.setRepoOverview(overview);
+        logger.info(
+          { overviewLength: overview.length },
+          'Repo overview pre-fetched and injected into prompt'
+        );
+      }
+    } catch (error) {
+      logger.warn(
+        { error: error instanceof Error ? error.message : 'Unknown' },
+        'Failed to pre-fetch repo overview, model will discover on first question'
+      );
+      // Non-fatal - model can still discover via tool calls
     }
   }
 

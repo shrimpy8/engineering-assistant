@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import type { ChatSettings, Model } from '@/types';
-import { Button } from '@/components/ui';
+import { Button, SampleRepoSuggestions } from '@/components/ui';
 import { RepoPathInput } from './RepoPathInput';
 import { ModelSelector } from './ModelSelector';
 
@@ -121,6 +121,12 @@ export function SettingsPanel({
               externalError={repoPathError}
             />
           </div>
+
+          {/* Quick Start Shortcuts - Always visible */}
+          <SampleRepoSuggestions
+            onSelectPath={(path) => onUpdateSettings({ repo_path: path })}
+            compact
+          />
 
           {/* Model Selection */}
           <ModelSelector
