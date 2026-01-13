@@ -165,7 +165,7 @@ Not all models support native tool calling. Ollama's tool calling API requires m
 - ✅ llama3.2 family (with bugs)
 - ❌ Most "coder" models (qwen, deepseek, codellama)
 
-**Interview talking point:** "We discovered that tool calling support is a model capability, not just an API feature. We had to carefully select models that support Ollama's native function calling format."
+**Key insight:** "We discovered that tool calling support is a model capability, not just an API feature. We had to carefully select models that support Ollama's native function calling format."
 
 ### 2. Temperature Matters for Tool Calling
 
@@ -174,7 +174,7 @@ Lower temperature (0.1-0.3) significantly improves:
 - Reduction in hallucination
 - Following structured workflows
 
-**Interview talking point:** "We reduced temperature to 0.3 for more deterministic tool usage. Higher temperatures caused the model to sometimes hallucinate file contents instead of calling tools."
+**Key insight:** "We reduced temperature to 0.3 for more deterministic tool usage. Higher temperatures caused the model to sometimes hallucinate file contents instead of calling tools."
 
 ### 3. Prompt Format Affects Execution vs Explanation
 
@@ -186,7 +186,7 @@ Lower temperature (0.1-0.3) significantly improves:
 | Natural conversational | Actually executes tool calls |
 | Bullet points with conditionals | Mixed results |
 
-**Interview talking point:** "We found that natural language prompts work better than rigid step-by-step instructions. The model interprets explicit formatting as a request to explain rather than execute."
+**Key insight:** "We found that natural language prompts work better than rigid step-by-step instructions. The model interprets explicit formatting as a request to explain rather than execute."
 
 ### 4. Multi-Round Tool Calls Need Orchestrator Support
 
@@ -195,7 +195,7 @@ The orchestrator must:
 2. Inject tool results back into conversation
 3. Eventually force text-only response to prevent loops
 
-**Interview talking point:** "We modified the orchestrator to support 2 rounds of tool calls, enabling patterns like 'detect project type, then read dependency file.'"
+**Key insight:** "We modified the orchestrator to support 2 rounds of tool calls, enabling patterns like 'detect project type, then read dependency file.'"
 
 ### 5. Error Recovery is Fragile
 
@@ -203,7 +203,7 @@ When a tool call fails (e.g., file not found), the model often:
 - Outputs the next tool call as JSON text instead of native format
 - Doesn't properly retry with alternative files
 
-**Interview talking point:** "Error recovery in LLM tool calling is still fragile. When one tool fails, models don't always gracefully retry with alternatives."
+**Key insight:** "Error recovery in LLM tool calling is still fragile. When one tool fails, models don't always gracefully retry with alternatives."
 
 ---
 
@@ -239,7 +239,7 @@ When asked about structure, use get_repo_overview.
 
 ---
 
-## Interview Discussion Points
+## Discussion Points
 
 1. **Model Selection:** "We evaluated 5 different models and found only llama3.1 properly supports Ollama's native tool calling."
 
@@ -343,7 +343,7 @@ The critical insight from this phase:
 
 **The sweet spot:** One clear, simple sentence per question type. No elaboration, no examples within the prompt, no conditional logic spelled out.
 
-### Updated Interview Talking Points
+### Additional Insights
 
 6. **Prompt Length Matters:** "We found that prompt verbosity affects execution. Too verbose and the model explains instead of executes. We keep guidance to one clear sentence per question type."
 
@@ -474,7 +474,7 @@ user specifically asks for structure.
 - Doesn't waste a tool round on `get_repo_overview`
 - Can answer complex questions correctly on the first try
 
-### Interview Talking Points
+### Key Insights
 
 9. **Context Pre-loading:** "We pre-fetch the repository structure when the user sets a repo path and inject it into the system prompt. This eliminates the 'cold start' problem where the model needs to discover the project layout before answering questions."
 
