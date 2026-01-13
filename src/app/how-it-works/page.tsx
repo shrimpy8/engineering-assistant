@@ -46,71 +46,156 @@ export default function HowItWorksPage() {
 
       {/* Architecture Flow */}
       <section className="py-12 px-4 bg-[var(--color-bg-secondary)]">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-bold text-[var(--color-text-primary)] text-center mb-12">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-2xl font-bold text-[var(--color-text-primary)] text-center mb-4">
             Architecture Overview
           </h2>
+          <p className="text-center text-[var(--color-text-secondary)] mb-12 max-w-2xl mx-auto">
+            Two modes, same powerful tools. Choose local privacy or enhanced reasoning.
+          </p>
 
-          {/* Flow Diagram */}
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-2">
-            {/* User */}
-            <FlowNode
-              icon="👤"
-              title="You"
-              subtitle="Ask a question"
-              color="blue"
-            />
-            <FlowArrow />
+          {/* Two Architecture Diagrams */}
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Web App Architecture */}
+            <div className="p-6 rounded-2xl bg-[var(--color-bg-primary)] border border-[var(--color-border)] shadow-sm">
+              <div className="flex items-center gap-2 mb-6">
+                <span className="text-2xl">🏠</span>
+                <h3 className="text-lg font-bold text-[var(--color-text-primary)]">Web App Mode</h3>
+                <span className="ml-auto px-2 py-1 text-xs font-medium bg-green-500/10 text-green-500 rounded-full">100% Local</span>
+              </div>
 
-            {/* Frontend */}
-            <FlowNode
-              icon="🖥️"
-              title="Next.js UI"
-              subtitle="React Frontend"
-              color="blue"
-            />
-            <FlowArrow />
+              {/* Web App Flow Diagram */}
+              <div className="space-y-4">
+                {/* Row 1: User & Browser */}
+                <div className="flex items-center justify-center gap-3">
+                  <ArchBlock icon="👤" label="You" sublabel="Browser" color="blue" />
+                  <ArchArrowRight />
+                  <ArchBlock icon="🖥️" label="Next.js UI" sublabel="React + Tailwind" color="blue" />
+                </div>
 
-            {/* API */}
-            <FlowNode
-              icon="🔌"
-              title="REST API"
-              subtitle="SSE Streaming"
-              color="purple"
-            />
-            <FlowArrow />
+                {/* Arrow Down */}
+                <div className="flex justify-center">
+                  <ArchArrowDown />
+                </div>
 
-            {/* Orchestrator */}
-            <FlowNode
-              icon="🎯"
-              title="Orchestrator"
-              subtitle="Tool Router"
-              color="purple"
-            />
-            <FlowArrow />
+                {/* Row 2: API Layer */}
+                <div className="flex items-center justify-center">
+                  <ArchBlock icon="🔌" label="REST API" sublabel="SSE Streaming" color="purple" wide />
+                </div>
 
-            {/* LLM + MCP */}
-            <div className="flex flex-col gap-2">
-              <FlowNode
-                icon="🧠"
-                title="Ollama"
-                subtitle="Local LLM"
-                color="green"
-                small
-              />
-              <FlowNode
-                icon="🔧"
-                title="MCP Tools"
-                subtitle="File Access"
-                color="green"
-                small
-              />
+                {/* Arrow Down */}
+                <div className="flex justify-center">
+                  <ArchArrowDown />
+                </div>
+
+                {/* Row 3: Orchestrator */}
+                <div className="flex items-center justify-center">
+                  <ArchBlock icon="🎯" label="Orchestrator" sublabel="Tool Router + Prompt Builder" color="purple" wide />
+                </div>
+
+                {/* Arrow Down with Split */}
+                <div className="flex justify-center">
+                  <ArchArrowDown />
+                </div>
+
+                {/* Row 4: LLM + Tools */}
+                <div className="flex items-center justify-center gap-3">
+                  <ArchBlock icon="🧠" label="Ollama" sublabel="llama3.1:8b" color="green" />
+                  <div className="text-[var(--color-text-tertiary)] text-xs">↔</div>
+                  <ArchBlock icon="🔧" label="MCP Tools" sublabel="Embedded Client" color="green" />
+                </div>
+
+                {/* Arrow Down */}
+                <div className="flex justify-center">
+                  <ArchArrowDown />
+                </div>
+
+                {/* Row 5: Repository */}
+                <div className="flex items-center justify-center">
+                  <ArchBlock icon="📁" label="Your Repository" sublabel="Read-Only Sandbox" color="orange" wide />
+                </div>
+              </div>
+
+              <p className="text-center text-xs text-[var(--color-text-tertiary)] mt-6">
+                All processing on your machine. No internet required.
+              </p>
+            </div>
+
+            {/* Claude Code Architecture */}
+            <div className="p-6 rounded-2xl bg-[var(--color-bg-primary)] border border-[var(--color-border)] shadow-sm">
+              <div className="flex items-center gap-2 mb-6">
+                <span className="text-2xl">🚀</span>
+                <h3 className="text-lg font-bold text-[var(--color-text-primary)]">Claude Code Mode</h3>
+                <span className="ml-auto px-2 py-1 text-xs font-medium bg-purple-500/10 text-purple-500 rounded-full">Enhanced LLM</span>
+              </div>
+
+              {/* Claude Code Flow Diagram */}
+              <div className="space-y-4">
+                {/* Row 1: User & CLI */}
+                <div className="flex items-center justify-center gap-3">
+                  <ArchBlock icon="👤" label="You" sublabel="Terminal" color="blue" />
+                  <ArchArrowRight />
+                  <ArchBlock icon="⌨️" label="Claude Code" sublabel="CLI Tool" color="blue" />
+                </div>
+
+                {/* Arrow Down */}
+                <div className="flex justify-center">
+                  <ArchArrowDown />
+                </div>
+
+                {/* Row 2: Claude LLM */}
+                <div className="flex items-center justify-center">
+                  <ArchBlock icon="🧠" label="Claude (Anthropic)" sublabel="Cloud API" color="purple" wide />
+                </div>
+
+                {/* Arrow Down */}
+                <div className="flex justify-center">
+                  <ArchArrowDown />
+                </div>
+
+                {/* Row 3: MCP Protocol */}
+                <div className="flex items-center justify-center">
+                  <ArchBlock icon="📡" label="MCP Protocol" sublabel="JSON-RPC over stdio" color="purple" wide />
+                </div>
+
+                {/* Arrow Down */}
+                <div className="flex justify-center">
+                  <ArchArrowDown />
+                </div>
+
+                {/* Row 4: MCP Server */}
+                <div className="flex items-center justify-center">
+                  <ArchBlock icon="🔧" label="MCP Server" sublabel="Subprocess" color="green" wide />
+                </div>
+
+                {/* Arrow Down */}
+                <div className="flex justify-center">
+                  <ArchArrowDown />
+                </div>
+
+                {/* Row 5: Repository */}
+                <div className="flex items-center justify-center">
+                  <ArchBlock icon="📁" label="Your Repository" sublabel="Read-Only Sandbox" color="orange" wide />
+                </div>
+              </div>
+
+              <p className="text-center text-xs text-[var(--color-text-tertiary)] mt-6">
+                Superior reasoning via Anthropic API. Same secure tools.
+              </p>
             </div>
           </div>
 
-          <p className="text-center text-[var(--color-text-tertiary)] mt-8 text-sm">
-            All processing happens locally on your machine. No data leaves your computer.
-          </p>
+          {/* Shared Components Callout */}
+          <div className="mt-8 p-4 rounded-xl bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20">
+            <div className="flex items-center justify-center gap-3 text-sm">
+              <span className="text-green-500 font-semibold">Shared:</span>
+              <span className="text-[var(--color-text-secondary)]">Same MCP tools</span>
+              <span className="text-[var(--color-text-tertiary)]">•</span>
+              <span className="text-[var(--color-text-secondary)]">Same security sandbox</span>
+              <span className="text-[var(--color-text-tertiary)]">•</span>
+              <span className="text-[var(--color-text-secondary)]">Same read-only access</span>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -526,6 +611,55 @@ function TechBadge({ name, category }: { name: string; category: string }) {
     <div className="p-3 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-center">
       <div className="text-sm font-semibold text-[var(--color-text-primary)]">{name}</div>
       <div className="text-xs text-[var(--color-text-tertiary)]">{category}</div>
+    </div>
+  );
+}
+
+// Component: Architecture Block
+function ArchBlock({ icon, label, sublabel, color, wide }: {
+  icon: string;
+  label: string;
+  sublabel: string;
+  color: 'blue' | 'purple' | 'green' | 'orange';
+  wide?: boolean;
+}) {
+  const colors = {
+    blue: 'bg-blue-500/10 border-blue-500/30',
+    purple: 'bg-purple-500/10 border-purple-500/30',
+    green: 'bg-green-500/10 border-green-500/30',
+    orange: 'bg-orange-500/10 border-orange-500/30',
+  };
+
+  return (
+    <div className={`
+      ${wide ? 'px-6 py-3 min-w-[200px]' : 'px-4 py-3 min-w-[120px]'}
+      rounded-lg border ${colors[color]} text-center
+    `}>
+      <div className="text-xl mb-1">{icon}</div>
+      <div className="text-sm font-semibold text-[var(--color-text-primary)]">{label}</div>
+      <div className="text-xs text-[var(--color-text-tertiary)]">{sublabel}</div>
+    </div>
+  );
+}
+
+// Component: Architecture Arrow Right
+function ArchArrowRight() {
+  return (
+    <div className="text-[var(--color-text-tertiary)]">
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+      </svg>
+    </div>
+  );
+}
+
+// Component: Architecture Arrow Down
+function ArchArrowDown() {
+  return (
+    <div className="text-[var(--color-text-tertiary)]">
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+      </svg>
     </div>
   );
 }
