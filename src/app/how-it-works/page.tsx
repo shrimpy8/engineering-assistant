@@ -35,11 +35,11 @@ export default function HowItWorksPage() {
           <h1 className="text-4xl md:text-5xl font-bold text-[var(--color-text-primary)] mb-6">
             How It Works
           </h1>
-          <p className="text-xl text-[var(--color-text-secondary)] max-w-2xl mx-auto">
+          <p className="text-xl font-medium text-[var(--color-text-secondary)] max-w-2xl mx-auto">
             A local-first AI assistant that helps you understand codebases through
-            <span className="text-[var(--color-accent)] font-medium"> transparent</span>,
-            <span className="text-green-500 font-medium"> secure</span>, and
-            <span className="text-purple-500 font-medium"> private</span> tooling.
+            <span className="text-[var(--color-accent)] font-semibold"> transparent</span>,
+            <span className="text-green-500 font-semibold"> secure</span>, and
+            <span className="text-purple-500 font-semibold"> private</span> tooling.
           </p>
         </div>
       </section>
@@ -50,7 +50,7 @@ export default function HowItWorksPage() {
           <h2 className="text-2xl font-bold text-[var(--color-text-primary)] text-center mb-4">
             Architecture Overview
           </h2>
-          <p className="text-center text-[var(--color-text-secondary)] mb-12 max-w-2xl mx-auto">
+          <p className="text-center font-medium text-[var(--color-text-secondary)] mb-12 max-w-2xl mx-auto">
             Two modes, same powerful tools. Choose local privacy or enhanced reasoning.
           </p>
 
@@ -116,7 +116,7 @@ export default function HowItWorksPage() {
                 </div>
               </div>
 
-              <p className="text-center text-xs text-[var(--color-text-tertiary)] mt-6">
+              <p className="text-center text-xs font-medium text-[var(--color-text-tertiary)] mt-6">
                 All processing on your machine. No internet required.
               </p>
             </div>
@@ -179,7 +179,7 @@ export default function HowItWorksPage() {
                 </div>
               </div>
 
-              <p className="text-center text-xs text-[var(--color-text-tertiary)] mt-6">
+              <p className="text-center text-xs font-medium text-[var(--color-text-tertiary)] mt-6">
                 Superior reasoning via Anthropic API. Same secure tools.
               </p>
             </div>
@@ -187,8 +187,8 @@ export default function HowItWorksPage() {
 
           {/* Shared Components Callout */}
           <div className="mt-8 p-4 rounded-xl bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20">
-            <div className="flex items-center justify-center gap-3 text-sm">
-              <span className="text-green-500 font-semibold">Shared:</span>
+            <div className="flex items-center justify-center gap-3 text-sm font-medium">
+              <span className="text-green-500 font-bold">Shared:</span>
               <span className="text-[var(--color-text-secondary)]">Same MCP tools</span>
               <span className="text-[var(--color-text-tertiary)]">•</span>
               <span className="text-[var(--color-text-secondary)]">Same security sandbox</span>
@@ -248,7 +248,7 @@ export default function HowItWorksPage() {
           <h2 className="text-2xl font-bold text-[var(--color-text-primary)] text-center mb-4">
             Transparency Over Magic
           </h2>
-          <p className="text-center text-[var(--color-text-secondary)] mb-12 max-w-2xl mx-auto">
+          <p className="text-center font-medium text-[var(--color-text-secondary)] mb-12 max-w-2xl mx-auto">
             The Tool Trace panel shows every action the AI takes. You always know exactly what files were read.
           </p>
 
@@ -373,7 +373,7 @@ export default function HowItWorksPage() {
           <h2 className="text-2xl font-bold text-[var(--color-text-primary)] text-center mb-4">
             Two Ways to Run
           </h2>
-          <p className="text-center text-[var(--color-text-secondary)] mb-12 max-w-2xl mx-auto">
+          <p className="text-center font-medium text-[var(--color-text-secondary)] mb-12 max-w-2xl mx-auto">
             Use the local web app with Ollama, or connect the MCP server to Claude Code for a more powerful LLM.
           </p>
 
@@ -391,18 +391,18 @@ export default function HowItWorksPage() {
               </thead>
               <tbody>
                 <tr className="border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
-                  <td className="py-3 px-4 text-sm font-medium text-[var(--color-text-primary)]">Web App</td>
-                  <td className="py-3 px-4 text-sm text-[var(--color-text-secondary)]">Ollama (local)</td>
-                  <td className="py-3 px-4 text-sm text-[var(--color-text-secondary)]">Embedded MCP</td>
-                  <td className="py-3 px-4 text-sm text-[var(--color-text-secondary)]">Next.js UI</td>
-                  <td className="py-3 px-4 text-sm text-[var(--color-text-secondary)]">100% private, local-first</td>
+                  <td className="py-3 px-4 text-sm font-semibold text-[var(--color-text-primary)]">Web App</td>
+                  <td className="py-3 px-4 text-sm font-medium text-[var(--color-text-secondary)]">Ollama (local)</td>
+                  <td className="py-3 px-4 text-sm font-medium text-[var(--color-text-secondary)]">Embedded MCP</td>
+                  <td className="py-3 px-4 text-sm font-medium text-[var(--color-text-secondary)]">Next.js UI</td>
+                  <td className="py-3 px-4 text-sm font-medium text-[var(--color-text-secondary)]">100% private, local-first</td>
                 </tr>
                 <tr className="border-b border-[var(--color-border)]">
-                  <td className="py-3 px-4 text-sm font-medium text-[var(--color-text-primary)]">Claude Code</td>
-                  <td className="py-3 px-4 text-sm text-[var(--color-text-secondary)]">Claude (Anthropic)</td>
-                  <td className="py-3 px-4 text-sm text-[var(--color-text-secondary)]">MCP Server</td>
-                  <td className="py-3 px-4 text-sm text-[var(--color-text-secondary)]">CLI</td>
-                  <td className="py-3 px-4 text-sm text-[var(--color-text-secondary)]">More capable LLM</td>
+                  <td className="py-3 px-4 text-sm font-semibold text-[var(--color-text-primary)]">Claude Code</td>
+                  <td className="py-3 px-4 text-sm font-medium text-[var(--color-text-secondary)]">Claude (Anthropic)</td>
+                  <td className="py-3 px-4 text-sm font-medium text-[var(--color-text-secondary)]">MCP Server</td>
+                  <td className="py-3 px-4 text-sm font-medium text-[var(--color-text-secondary)]">CLI</td>
+                  <td className="py-3 px-4 text-sm font-medium text-[var(--color-text-secondary)]">More capable LLM</td>
                 </tr>
               </tbody>
             </table>
@@ -413,9 +413,9 @@ export default function HowItWorksPage() {
             <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xl">🏠</span>
-                <h3 className="font-semibold text-[var(--color-text-primary)]">Web App Mode</h3>
+                <h3 className="font-bold text-[var(--color-text-primary)]">Web App Mode</h3>
               </div>
-              <ul className="text-sm text-[var(--color-text-secondary)] space-y-1">
+              <ul className="text-sm font-medium text-[var(--color-text-secondary)] space-y-1">
                 <li>• Runs entirely on your machine</li>
                 <li>• No API costs or internet required</li>
                 <li>• Visual tool trace panel</li>
@@ -425,9 +425,9 @@ export default function HowItWorksPage() {
             <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xl">🚀</span>
-                <h3 className="font-semibold text-[var(--color-text-primary)]">Claude Code Mode</h3>
+                <h3 className="font-bold text-[var(--color-text-primary)]">Claude Code Mode</h3>
               </div>
-              <ul className="text-sm text-[var(--color-text-secondary)] space-y-1">
+              <ul className="text-sm font-medium text-[var(--color-text-secondary)] space-y-1">
                 <li>• Superior reasoning capabilities</li>
                 <li>• True MCP protocol over subprocess</li>
                 <li>• Same sandboxed, read-only tools</li>
@@ -436,7 +436,7 @@ export default function HowItWorksPage() {
             </div>
           </div>
 
-          <p className="text-center text-sm text-[var(--color-text-tertiary)] mt-6">
+          <p className="text-center text-sm font-medium text-[var(--color-text-tertiary)] mt-6">
             See the{' '}
             <a
               href="https://github.com/shrimpy8/engineering-assistant/blob/main/docs/claude-code-integration.md"
@@ -457,7 +457,7 @@ export default function HowItWorksPage() {
           <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-4">
             Ready to Explore Your Codebase?
           </h2>
-          <p className="text-[var(--color-text-secondary)] mb-8">
+          <p className="font-medium text-[var(--color-text-secondary)] mb-8">
             Start asking questions about any repository. It&apos;s 100% local and private.
           </p>
           <Link
@@ -474,7 +474,7 @@ export default function HowItWorksPage() {
 
       {/* Footer */}
       <footer className="py-8 px-4 border-t border-[var(--color-border)]">
-        <div className="max-w-5xl mx-auto text-center text-sm text-[var(--color-text-tertiary)]">
+        <div className="max-w-5xl mx-auto text-center text-sm font-medium text-[var(--color-text-tertiary)]">
           <p>Built to demonstrate modern developer tooling practices.</p>
           <p className="mt-2">
             <a
@@ -513,8 +513,8 @@ function FlowNode({ icon, title, subtitle, color, small }: {
       text-center min-w-[100px]
     `}>
       <div className={`${small ? 'text-xl' : 'text-2xl'} mb-1`}>{icon}</div>
-      <div className={`${small ? 'text-xs' : 'text-sm'} font-semibold text-[var(--color-text-primary)]`}>{title}</div>
-      <div className={`${small ? 'text-[10px]' : 'text-xs'} text-[var(--color-text-tertiary)]`}>{subtitle}</div>
+      <div className={`${small ? 'text-xs' : 'text-sm'} font-bold text-[var(--color-text-primary)]`}>{title}</div>
+      <div className={`${small ? 'text-[10px]' : 'text-xs'} font-medium text-[var(--color-text-tertiary)]`}>{subtitle}</div>
     </div>
   );
 }
@@ -555,9 +555,9 @@ function ConceptCard({ icon, title, description, highlight, color }: {
   return (
     <div className={`p-6 rounded-xl bg-[var(--color-bg-secondary)] border ${colors[color]} transition-colors`}>
       <div className="text-3xl mb-3">{icon}</div>
-      <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">{title}</h3>
-      <p className="text-sm text-[var(--color-text-secondary)] mb-3">{description}</p>
-      <p className={`text-xs font-medium ${highlightColors[color]}`}>{highlight}</p>
+      <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-2">{title}</h3>
+      <p className="text-sm font-medium text-[var(--color-text-secondary)] mb-3">{description}</p>
+      <p className={`text-xs font-semibold ${highlightColors[color]}`}>{highlight}</p>
     </div>
   );
 }
@@ -572,8 +572,8 @@ function ToolTraceItem({ tool, status, detail }: { tool: string; status: string;
         </svg>
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium text-[var(--color-text-primary)]">{tool}</div>
-        <div className="text-xs text-[var(--color-text-tertiary)] truncate">{detail}</div>
+        <div className="text-sm font-semibold text-[var(--color-text-primary)]">{tool}</div>
+        <div className="text-xs font-medium text-[var(--color-text-tertiary)] truncate">{detail}</div>
       </div>
     </div>
   );
@@ -584,8 +584,8 @@ function ToolCard({ name, description, icon }: { name: string; description: stri
   return (
     <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-accent)]/50 transition-colors">
       <div className="text-2xl mb-2">{icon}</div>
-      <div className="text-sm font-mono font-semibold text-[var(--color-accent)] mb-1">{name}</div>
-      <p className="text-xs text-[var(--color-text-secondary)]">{description}</p>
+      <div className="text-sm font-mono font-bold text-[var(--color-accent)] mb-1">{name}</div>
+      <p className="text-xs font-medium text-[var(--color-text-secondary)]">{description}</p>
     </div>
   );
 }
@@ -598,8 +598,8 @@ function StepItem({ number, title, description }: { number: number; title: strin
         {number}
       </div>
       <div className="flex-1 pt-1">
-        <h3 className="font-semibold text-[var(--color-text-primary)] mb-1">{title}</h3>
-        <p className="text-sm text-[var(--color-text-secondary)]">{description}</p>
+        <h3 className="font-bold text-[var(--color-text-primary)] mb-1">{title}</h3>
+        <p className="text-sm font-medium text-[var(--color-text-secondary)]">{description}</p>
       </div>
     </div>
   );
@@ -609,8 +609,8 @@ function StepItem({ number, title, description }: { number: number; title: strin
 function TechBadge({ name, category }: { name: string; category: string }) {
   return (
     <div className="p-3 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-center">
-      <div className="text-sm font-semibold text-[var(--color-text-primary)]">{name}</div>
-      <div className="text-xs text-[var(--color-text-tertiary)]">{category}</div>
+      <div className="text-sm font-bold text-[var(--color-text-primary)]">{name}</div>
+      <div className="text-xs font-medium text-[var(--color-text-tertiary)]">{category}</div>
     </div>
   );
 }
@@ -636,8 +636,8 @@ function ArchBlock({ icon, label, sublabel, color, wide }: {
       rounded-lg border ${colors[color]} text-center
     `}>
       <div className="text-xl mb-1">{icon}</div>
-      <div className="text-sm font-semibold text-[var(--color-text-primary)]">{label}</div>
-      <div className="text-xs text-[var(--color-text-tertiary)]">{sublabel}</div>
+      <div className="text-sm font-bold text-[var(--color-text-primary)]">{label}</div>
+      <div className="text-xs font-medium text-[var(--color-text-tertiary)]">{sublabel}</div>
     </div>
   );
 }
