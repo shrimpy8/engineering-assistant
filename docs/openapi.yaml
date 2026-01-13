@@ -1,0 +1,1009 @@
+openapi: 3.0.3
+info:
+  title: Engineering Assistant API
+  description: |
+    REST API for the Engineering Assistant - a local-first AI assistant for codebase analysis.
+
+    ## Design Principles
+    - Stripe-style consistent response shapes
+    - Request ID tracking in every response
+    - Self-documenting error codes
+    - SSE streaming for chat completions
+  version: 1.1.0
+  contact:
+    name: Engineering Assistant
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development server
+
+tags:
+  - name: Health
+    description: Service health and status
+  - name: Models
+    description: Ollama model management
+  - name: Files
+    description: Repository file listing
+  - name: Chat
+    description: Chat completions with AI
+
+paths:
+  /health:
+    get:
+      summary: Health Check
+      description: Check service health and dependency status
+      operationId: getHealth
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service health status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                success: true
+                data:
+                  status: healthy
+                  version: "0.1.0"
+                  services:
+                    ollama:
+                      status: connected
+                      latency_ms: 15
+                    mcp_server:
+                      status: connected
+                      latency_ms: 5
+                meta:
+                  request_id: req_health_123
+                  timestamp: "2026-01-11T12:00:00.000Z"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /models:
+    get:
+      summary: List Models
+      description: List available Ollama models
+      operationId: listModels
+      tags:
+        - Models
+      responses:
+        '200':
+          description: List of available models
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelsResponse'
+              example:
+                success: true
+                data:
+                  models:
+                    - name: "llama3.1:8b"
+                      size: 4661224448
+                      modified_at: "2026-01-10T10:00:00.000Z"
+                      digest: "sha256:abc123..."
+                    - name: "codellama:7b"
+                      size: 3825819648
+                      modified_at: "2026-01-09T15:00:00.000Z"
+                      digest: "sha256:def456..."
+                meta:
+                  request_id: req_models_456
+                  timestamp: "2026-01-11T12:00:00.000Z"
+        '502':
+          description: Ollama unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /models/pull:
+    post:
+      summary: Pull Model
+      description: Pull a model from Ollama and stream progress updates.
+      operationId: pullModel
+      tags:
+        - Models
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PullModelRequest'
+            example:
+              model: llama3.1:8b
+      responses:
+        '200':
+          description: SSE stream of model pull progress
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: SSE stream of JSON progress events
+              example: |
+                data: {"status":"pulling manifest"}
+
+                data: {"status":"downloading","completed":12345,"total":67890}
+
+                data: {"type":"done"}
+
+                data: [DONE]
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /prompt:
+    get:
+      summary: Prompt Transparency
+      description: Return the system prompt for the current settings.
+      operationId: getPrompt
+      tags:
+        - Chat
+      parameters:
+        - name: repo_path
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Repository root path
+        - name: tool_mode
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [auto, manual]
+            default: auto
+          description: Tool usage mode
+      responses:
+        '200':
+          description: System prompt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromptResponse'
+              example:
+                success: true
+                data:
+                  prompt: "You are an expert software engineering assistant..."
+                meta:
+                  request_id: req_prompt_123
+                  timestamp: "2026-01-11T12:00:00.000Z"
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /files:
+    get:
+      summary: List or Read Files
+      description: List files in a repository directory or read file contents
+      operationId: listFiles
+      tags:
+        - Files
+      parameters:
+        - name: repo
+          in: query
+          required: false
+          description: Repository root path (default current working directory)
+          schema:
+            type: string
+          example: /Users/dev/myproject
+        - name: path
+          in: query
+          required: false
+          description: Relative path within repo (default ".")
+          schema:
+            type: string
+            default: "."
+          example: src
+        - name: read
+          in: query
+          required: false
+          description: If true and path is a file, returns file content
+          schema:
+            type: boolean
+            default: false
+        - name: max_bytes
+          in: query
+          required: false
+          description: Maximum bytes to read when read=true (default 100000, max 10485760)
+          schema:
+            type: integer
+            default: 100000
+            maximum: 10485760
+        - name: encoding
+          in: query
+          required: false
+          description: Output encoding when read=true
+          schema:
+            type: string
+            enum: [utf-8, base64]
+            default: utf-8
+      responses:
+        '200':
+          description: List of files or file content
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ListFilesResponse'
+                  - $ref: '#/components/schemas/ReadFileResponse'
+              examples:
+                listDirectory:
+                  summary: Directory listing
+                  value:
+                    success: true
+                    data:
+                      path: src
+                      entries:
+                        - name: components
+                          path: src/components
+                          type: directory
+                          modified_at: "2026-01-11T10:00:00.000Z"
+                        - name: index.ts
+                          path: src/index.ts
+                          type: file
+                          size: 1234
+                          modified_at: "2026-01-11T10:00:00.000Z"
+                    meta:
+                      request_id: req_files_789
+                      timestamp: "2026-01-11T12:00:00.000Z"
+                      duration_ms: 15
+                readFile:
+                  summary: File content
+                  value:
+                    success: true
+                    data:
+                      path: src/index.ts
+                      content: "export function main() { ... }"
+                      size: 1234
+                      modified_at: "2026-01-11T10:00:00.000Z"
+                      encoding: utf-8
+                      truncated: false
+                    meta:
+                      request_id: req_files_790
+                      timestamp: "2026-01-11T12:00:00.000Z"
+                      duration_ms: 8
+        '403':
+          description: Access denied (path traversal)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Path not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /files/read:
+    post:
+      summary: Read File Content
+      description: Read file contents from the repository (per PRD Section 6.4.4)
+      operationId: readFile
+      tags:
+        - Files
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReadFileRequest'
+            example:
+              path: src/index.ts
+              repo_path: /Users/dev/myproject
+              max_bytes: 100000
+      responses:
+        '200':
+          description: File content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadFileApiResponse'
+              example:
+                success: true
+                data:
+                  path: src/index.ts
+                  content: "export function main() { ... }"
+                  size: 1234
+                  modified_at: "2026-01-11T10:00:00.000Z"
+                  encoding: utf-8
+                  truncated: false
+                meta:
+                  request_id: req_files_read_123
+                  timestamp: "2026-01-11T12:00:00.000Z"
+                  duration_ms: 8
+        '403':
+          description: Access denied (path traversal)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: File not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /chat/completions:
+    post:
+      summary: Chat Completions
+      description: |
+        Send a chat message and receive a response. Uses OpenAI-compatible format.
+
+        When `stream: true` (default), returns a Server-Sent Events stream.
+        When `stream: false`, returns a complete JSON response wrapped in Stripe-style envelope.
+      operationId: createChatCompletion
+      tags:
+        - Chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatCompletionRequest'
+            examples:
+              streaming:
+                summary: Streaming request
+                value:
+                  messages:
+                    - role: user
+                      content: Explain the authentication flow in this codebase
+                  settings:
+                    model: llama3.1:8b
+                    repo_path: /Users/dev/myproject
+                  stream: true
+              non_streaming:
+                summary: Non-streaming request
+                value:
+                  messages:
+                    - role: user
+                      content: What files are in the src directory?
+                  settings:
+                    model: llama3.1:8b
+                    repo_path: /Users/dev/myproject
+                  stream: false
+      responses:
+        '200':
+          description: |
+            Chat completion response.
+
+            **Streaming (default):** Returns `text/event-stream` with OpenAI-compatible SSE events.
+
+            **Non-streaming:** Returns JSON with the complete response in Stripe-style envelope.
+          headers:
+            X-Request-ID:
+              description: Unique request identifier
+              schema:
+                type: string
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: Server-Sent Events stream (OpenAI-compatible format)
+              example: |
+                data: {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1704974400,"model":"llama3.1:8b","choices":[{"index":0,"delta":{"content":"Here is"},"finish_reason":null}]}
+
+                data: {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1704974400,"model":"llama3.1:8b","choices":[{"index":0,"delta":{"content":" the code"},"finish_reason":null}]}
+
+                data: {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1704974400,"model":"llama3.1:8b","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}
+
+                data: [DONE]
+
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatCompletionResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Ollama unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    # Common response envelope
+    ResponseMeta:
+      type: object
+      required:
+        - request_id
+        - timestamp
+      properties:
+        request_id:
+          type: string
+          description: Unique request identifier
+          example: req_abc123
+        timestamp:
+          type: string
+          format: date-time
+          description: Response timestamp
+          example: "2026-01-11T12:00:00.000Z"
+        duration_ms:
+          type: integer
+          description: Request duration in milliseconds
+          example: 45
+
+    SuccessResponse:
+      type: object
+      required:
+        - success
+        - data
+        - meta
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+        - meta
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        error:
+          $ref: '#/components/schemas/ApiError'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    ApiError:
+      type: object
+      required:
+        - code
+        - message
+        - type
+      properties:
+        code:
+          type: string
+          description: Machine-readable error code
+          example: repo_path_not_found
+        message:
+          type: string
+          description: Human-readable error description
+          example: The specified repository path does not exist
+        type:
+          type: string
+          enum:
+            - validation_error
+            - not_found_error
+            - service_error
+            - authentication_error
+            - rate_limit_error
+          description: Error category
+        param:
+          type: string
+          description: Parameter that caused the error
+          example: settings.repo_path
+        details:
+          type: array
+          items:
+            type: object
+          description: Additional error details
+        doc_url:
+          type: string
+          description: Link to local documentation for this error
+
+    # Health endpoint
+    HealthResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/HealthData'
+
+    HealthData:
+      type: object
+      required:
+        - status
+        - version
+        - services
+      properties:
+        status:
+          type: string
+          enum:
+            - healthy
+            - degraded
+            - unhealthy
+          description: Overall health status
+        version:
+          type: string
+          description: Application version
+          example: "0.1.0"
+        services:
+          type: object
+          properties:
+            ollama:
+              $ref: '#/components/schemas/ServiceStatus'
+            mcp_server:
+              $ref: '#/components/schemas/ServiceStatus'
+
+    ServiceStatus:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - connected
+            - disconnected
+            - error
+        latency_ms:
+          type: integer
+          description: Connection latency in milliseconds
+        error:
+          type: string
+          description: Error message if status is error
+
+    # Models endpoint
+    ModelsResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              required:
+                - models
+              properties:
+                models:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/OllamaModel'
+
+    OllamaModel:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Model name
+          example: llama3.1:8b
+        size:
+          type: integer
+          description: Model size in bytes
+          example: 4661224448
+        modified_at:
+          type: string
+          format: date-time
+          description: Last modification timestamp
+        digest:
+          type: string
+          description: Model digest hash
+          example: "sha256:abc123..."
+
+    PullModelRequest:
+      type: object
+      required:
+        - model
+      properties:
+        model:
+          type: string
+          description: Model name to pull
+          example: llama3.1:8b
+
+    # Files endpoint
+    ListFilesResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/ListFilesData'
+
+    ReadFileResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/ReadFileData'
+
+    ListFilesData:
+      type: object
+      required:
+        - path
+        - entries
+      properties:
+        path:
+          type: string
+          description: Current directory path
+          example: src
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileEntry'
+
+    ReadFileRequest:
+      type: object
+      required:
+        - path
+        - repo_path
+      properties:
+        path:
+          type: string
+          description: Relative file path within repo
+          example: src/index.ts
+        repo_path:
+          type: string
+          description: Repository root path
+          example: /Users/dev/myproject
+        max_bytes:
+          type: integer
+          description: Maximum bytes to read
+          default: 100000
+          example: 100000
+
+    ReadFileApiResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/ReadFileApiData'
+
+    ReadFileApiData:
+      type: object
+      required:
+        - path
+        - content
+        - size
+        - modified_at
+        - encoding
+        - truncated
+      properties:
+        path:
+          type: string
+          description: File path
+          example: src/index.ts
+        content:
+          type: string
+          description: File content
+        size:
+          type: integer
+          description: File size in bytes
+        modified_at:
+          type: string
+          format: date-time
+          description: Last modification timestamp
+        encoding:
+          type: string
+          description: Content encoding
+          enum: [utf-8, base64]
+          example: utf-8
+        truncated:
+          type: boolean
+          description: Whether content was truncated
+          example: false
+
+    ReadFileData:
+      type: object
+      required:
+        - path
+        - content
+        - size
+        - modified_at
+      properties:
+        path:
+          type: string
+          description: File path
+          example: src/index.ts
+        content:
+          type: string
+          description: File content
+        size:
+          type: integer
+          description: File size in bytes
+        modified_at:
+          type: string
+          format: date-time
+          description: Last modification timestamp
+        encoding:
+          type: string
+          description: Content encoding
+          enum: [utf-8, base64]
+        truncated:
+          type: boolean
+          description: Whether content was truncated
+
+    FileEntry:
+      type: object
+      required:
+        - name
+        - path
+        - type
+      properties:
+        name:
+          type: string
+          description: File or directory name
+          example: index.ts
+        path:
+          type: string
+          description: Relative file path
+          example: src/index.ts
+        type:
+          type: string
+          enum:
+            - file
+            - directory
+        size:
+          type: integer
+          description: File size in bytes (files only)
+        modified_at:
+          type: string
+          format: date-time
+          description: Last modification timestamp
+
+    # Chat endpoint
+    ChatCompletionRequest:
+      oneOf:
+        - $ref: '#/components/schemas/ChatCompletionRequestWithSettings'
+        - $ref: '#/components/schemas/ChatCompletionRequestFlat'
+
+    ChatCompletionRequestWithSettings:
+      type: object
+      required:
+        - messages
+      properties:
+        messages:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+        settings:
+          $ref: '#/components/schemas/ChatSettings'
+        stream:
+          type: boolean
+          default: true
+          description: Enable SSE streaming response
+
+    ChatCompletionRequestFlat:
+      type: object
+      required:
+        - messages
+      properties:
+        model:
+          type: string
+          description: Ollama model name (uses default if not specified)
+          example: llama3.1:8b
+        messages:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+        stream:
+          type: boolean
+          default: true
+          description: Enable SSE streaming response
+        temperature:
+          type: number
+          minimum: 0
+          maximum: 2
+          default: 0.7
+          description: Sampling temperature
+        max_tokens:
+          type: integer
+          description: Maximum tokens to generate
+        repo_path:
+          type: string
+          description: Repository path for context
+          example: /Users/dev/myproject
+        tool_mode:
+          type: string
+          enum: [auto, manual]
+          description: Tool usage mode
+
+    ChatSettings:
+      type: object
+      properties:
+        model:
+          type: string
+          description: Ollama model name (uses default if not specified)
+          example: llama3.1:8b
+        repo_path:
+          type: string
+          description: Repository path for context
+          example: /Users/dev/myproject
+        temperature:
+          type: number
+          minimum: 0
+          maximum: 2
+          default: 0.7
+          description: Sampling temperature
+        max_tokens:
+          type: integer
+          description: Maximum tokens to generate
+        tool_mode:
+          type: string
+          enum: [auto, manual]
+          description: Tool usage mode
+
+    ChatMessage:
+      type: object
+      required:
+        - role
+        - content
+      properties:
+        role:
+          type: string
+          enum:
+            - system
+            - user
+            - assistant
+            - tool
+          description: Message role
+        content:
+          type: string
+          description: Message content
+        name:
+          type: string
+          description: Optional name for tool messages
+        tool_call_id:
+          type: string
+          description: Tool call ID for tool response messages
+
+    ChatCompletionResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/ChatCompletionData'
+
+    ChatCompletionData:
+      type: object
+      required:
+        - id
+        - object
+        - created
+        - model
+        - content
+      properties:
+        id:
+          type: string
+          description: Completion ID
+          example: chatcmpl-1704974400-abc123
+        object:
+          type: string
+          enum: [chat.completion]
+        created:
+          type: integer
+          description: Unix timestamp
+          example: 1704974400
+        model:
+          type: string
+          description: Model used
+          example: llama3.1:8b
+        content:
+          type: string
+          description: Generated response content
+        tool_calls:
+          type: array
+          items:
+            $ref: '#/components/schemas/ToolCallResult'
+        usage:
+          $ref: '#/components/schemas/UsageStats'
+
+    ToolCallResult:
+      type: object
+      required:
+        - id
+        - name
+        - arguments
+        - duration_ms
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        arguments:
+          type: object
+          additionalProperties: true
+        result:
+          description: Tool result payload (tool-specific)
+        duration_ms:
+          type: integer
+          description: Tool execution time in milliseconds
+
+    PromptResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              required:
+                - prompt
+              properties:
+                prompt:
+                  type: string
+                  description: System prompt text
+
+    UsageStats:
+      type: object
+      properties:
+        prompt_tokens:
+          type: integer
+          description: Input tokens
+        completion_tokens:
+          type: integer
+          description: Output tokens
+        total_tokens:
+          type: integer
+          description: Total tokens
+
+    # SSE Event Types (OpenAI-compatible)
+    ChatCompletionChunk:
+      type: object
+      required:
+        - id
+        - object
+        - created
+        - model
+        - choices
+      properties:
+        id:
+          type: string
+          description: Completion ID
+        object:
+          type: string
+          enum: [chat.completion.chunk]
+        created:
+          type: integer
+          description: Unix timestamp
+        model:
+          type: string
+          description: Model name
+        choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatCompletionChunkChoice'
+
+    ChatCompletionChunkChoice:
+      type: object
+      required:
+        - index
+        - delta
+        - finish_reason
+      properties:
+        index:
+          type: integer
+        delta:
+          type: object
+          properties:
+            role:
+              type: string
+            content:
+              type: string
+        finish_reason:
+          type: string
+          nullable: true
+          enum: [stop, length, null]

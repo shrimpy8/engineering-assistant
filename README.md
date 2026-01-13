@@ -1,36 +1,200 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Engineering Assistant
 
-## Getting Started
+A **local-first AI assistant** that helps developers understand codebases through transparent, secure, and well-designed tooling.
 
-First, run the development server:
+**100% Private** - Runs entirely on your machine using Ollama. No data leaves your computer.
+
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Node](https://img.shields.io/badge/node-18%2B-green.svg)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)
+
+## Features
+
+- **Chat with AI** about any codebase using local Ollama models
+- **Transparent Tool Execution** - See every file the AI reads in the Tool Trace panel
+- **Read-Only Sandboxed Access** - Secure, non-destructive exploration
+- **SSE Streaming** - Real-time responses with tool lifecycle events
+- **MCP Protocol** - Built on Model Context Protocol for standardization
+
+### Quick Start Questions
+
+Click these suggested questions to explore any repository:
+
+| Button | Question |
+|--------|----------|
+| 🛠️ Tech stack | What is the technology stack used in this project? |
+| 📋 What is this project? | What is this project about? |
+| 📁 Show structure | Show me the project structure |
+| 🔍 Find main entry | Where is the main entry point? |
+| 📦 List dependencies | What dependencies does this project use? |
+| ⚙️ Explain codebase | Explain the codebase |
+
+## Prerequisites
+
+- **Node.js** 18+
+- **npm** 9+
+- **Ollama** running locally with a **tool-compatible model**
+
+### Required: Tool-Compatible Models
+
+This app uses Ollama's **native tool calling API** for file browsing. Only certain models properly support this.
+
+**Verified working models:**
+
+| Model | Size | Notes |
+|-------|------|-------|
+| `llama3.1:8b` | 4.9GB | **Recommended** - Best balance of capability and tool support |
+| `llama3.2:3b` | 2.0GB | Faster, but may have stability issues |
+
+**Models that do NOT work** (output JSON text instead of using tool_calls):
+- `mistral:7b`, `qwen2.5-coder`, `deepseek-coder`, `codellama`
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Install Ollama (macOS)
+brew install ollama
+
+# Pull the recommended model
+ollama pull llama3.1:8b
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Quick Start
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# Clone the repository
+git clone https://github.com/shrimpy8/engineering-assistant.git
+cd engineering-assistant
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Install dependencies
+npm install
 
-## Learn More
+# Start development server
+npm run dev
 
-To learn more about Next.js, take a look at the following resources:
+# Open http://localhost:3000
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+engineering-assistant/
+├── src/
+│   ├── app/                 # Next.js App Router
+│   │   └── api/v1/          # REST API endpoints
+│   ├── components/          # React components
+│   │   ├── chat/            # Chat UI components
+│   │   ├── settings/        # Settings panel
+│   │   ├── trace/           # Tool trace panel
+│   │   └── ui/              # Reusable UI components
+│   ├── hooks/               # React hooks (useChat, useSettings)
+│   └── lib/                 # Core libraries
+│       ├── tools/           # MCP tool implementations
+│       ├── mcp/             # MCP client module
+│       ├── orchestrator/    # Chat orchestration
+│       └── ollama/          # Ollama integration
+├── mcp-server/              # Standalone MCP server
+├── config/                  # Configuration files
+│   └── prompts/             # System prompts
+└── docs/                    # Documentation
+    ├── API.md               # REST API reference
+    ├── MCP.md               # MCP tools reference
+    └── ARCHITECTURE.md      # System architecture
+```
 
-## Deploy on Vercel
+## API Endpoints
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/health` | GET | Service health check |
+| `/api/v1/models` | GET | List available Ollama models |
+| `/api/v1/models/pull` | POST | Pull Ollama model (SSE) |
+| `/api/v1/files` | GET | List repository files |
+| `/api/v1/files/read` | POST | Read file contents |
+| `/api/v1/chat/completions` | POST | Chat with AI (SSE streaming) |
+| `/api/v1/prompt` | GET | View system prompt |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+See [docs/API.md](docs/API.md) for full documentation.
+
+## MCP Tools
+
+The AI assistant has access to four read-only tools:
+
+| Tool | Description |
+|------|-------------|
+| `list_files` | List files and directories in a path |
+| `read_file` | Read contents of a specific file |
+| `search_files` | Search for patterns across files using regex |
+| `get_repo_overview` | Get repository structure, stats, and tech detection |
+
+See [docs/MCP.md](docs/MCP.md) for tool parameters and response formats.
+
+## Configuration
+
+Create a `.env.local` file (optional):
+
+```bash
+# Ollama configuration
+OLLAMA_BASE_URL=http://127.0.0.1:11434
+OLLAMA_DEFAULT_MODEL=llama3.1:8b
+
+# Optional: Restrict repository access to a specific directory
+ALLOWED_REPO_ROOT=/Users/yourname/projects
+```
+
+### LLM Settings
+
+| Setting | Default | Notes |
+|---------|---------|-------|
+| Temperature | 0.3 | Lower values = more reliable tool usage |
+| Max Tool Rounds | 2 | Enables sequential tool calls |
+| Tool Mode | auto | AI proactively uses tools |
+
+> **Tip:** Keep temperature at 0.1-0.3 for reliable tool calling. Higher values may cause hallucinated file contents.
+
+## Development
+
+```bash
+# Development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Run production build
+npm start
+
+# Type checking
+npm run typecheck
+
+# Linting
+npm run lint
+```
+
+## Design Principles
+
+1. **Transparency Over Magic** - Every AI action visible to users
+2. **Local & Private** - All processing on user's machine
+3. **Security as a Feature** - Sandboxed read-only access
+4. **Errors Are Part of UX** - Actionable error messages
+5. **API Design Is Product Design** - Consistent, predictable responses
+
+## Tech Stack
+
+- **Frontend:** Next.js 15, React 19, TypeScript, Tailwind CSS
+- **Backend:** Next.js API Routes, Server-Sent Events
+- **AI:** Ollama (local LLM), Model Context Protocol (MCP)
+- **Testing:** Playwright (E2E)
+
+## Documentation
+
+- [API Reference](docs/API.md) - REST endpoint documentation
+- [MCP Tools](docs/MCP.md) - Tool parameters and responses
+- [Architecture](docs/ARCHITECTURE.md) - System design and data flow
+- [OpenAPI Spec](docs/openapi.yaml) - OpenAPI 3.0 specification
+
+## License
+
+MIT
+
+---
+
+*Built to demonstrate modern developer tooling practices: transparent AI, local-first architecture, and Stripe-style API design.*

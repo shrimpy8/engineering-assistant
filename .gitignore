@@ -30,8 +30,13 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+# Keep .env.example tracked
 
 # vercel
 .vercel
@@ -39,3 +44,42 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# MCP Server
+mcp-server/node_modules
+mcp-server/dist
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Logs
+logs
+*.log
+
+# Internal/Private files - NOT for GitHub
+archive/
+test-results/
+PROGRESS.md
+TECH_DEBT.md
+CLAUDE.md
+listofprojecttotest.txt
+
+# Internal PRDs and analysis docs
+docs/engineering-assistant-prd-v1.4.md
+docs/PRD-*.md
+docs/prd-v1.4-gap-analysis-*.md
+docs/review-findings-*.md
+docs/ARCHITECTURE_DECISION_MCP.md
+docs/demo-flow.md
+docs/demo-guide.md
+docs/examples/
+
+# Internal test scripts
+scripts/test_llm_responses.py
+scripts/test-llm-responses.*
+
+# Claude Code local settings
+.claude/

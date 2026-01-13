@@ -1,0 +1,32 @@
+{
+  "name": "@engineering-assistant/mcp-server",
+  "version": "0.1.0",
+  "description": "MCP server for Engineering Assistant - provides sandboxed file system access",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "ea-mcp-server": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "test": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "glob": "^11.0.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.28",
+    "@vitest/coverage-v8": "^2.1.0",
+    "typescript": "^5",
+    "vitest": "^2.1.9"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
