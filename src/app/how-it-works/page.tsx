@@ -282,6 +282,90 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
+      {/* Claude Code Integration */}
+      <section className="py-16 px-4">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-2xl font-bold text-[var(--color-text-primary)] text-center mb-4">
+            Two Ways to Run
+          </h2>
+          <p className="text-center text-[var(--color-text-secondary)] mb-12 max-w-2xl mx-auto">
+            Use the local web app with Ollama, or connect the MCP server to Claude Code for a more powerful LLM.
+          </p>
+
+          {/* Comparison Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b border-[var(--color-border)]">
+                  <th className="py-3 px-4 text-left text-sm font-semibold text-[var(--color-text-primary)]">Mode</th>
+                  <th className="py-3 px-4 text-left text-sm font-semibold text-[var(--color-text-primary)]">LLM</th>
+                  <th className="py-3 px-4 text-left text-sm font-semibold text-[var(--color-text-primary)]">Tools</th>
+                  <th className="py-3 px-4 text-left text-sm font-semibold text-[var(--color-text-primary)]">Interface</th>
+                  <th className="py-3 px-4 text-left text-sm font-semibold text-[var(--color-text-primary)]">Use Case</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+                  <td className="py-3 px-4 text-sm font-medium text-[var(--color-text-primary)]">Web App</td>
+                  <td className="py-3 px-4 text-sm text-[var(--color-text-secondary)]">Ollama (local)</td>
+                  <td className="py-3 px-4 text-sm text-[var(--color-text-secondary)]">Embedded MCP</td>
+                  <td className="py-3 px-4 text-sm text-[var(--color-text-secondary)]">Next.js UI</td>
+                  <td className="py-3 px-4 text-sm text-[var(--color-text-secondary)]">100% private, local-first</td>
+                </tr>
+                <tr className="border-b border-[var(--color-border)]">
+                  <td className="py-3 px-4 text-sm font-medium text-[var(--color-text-primary)]">Claude Code</td>
+                  <td className="py-3 px-4 text-sm text-[var(--color-text-secondary)]">Claude (Anthropic)</td>
+                  <td className="py-3 px-4 text-sm text-[var(--color-text-secondary)]">MCP Server</td>
+                  <td className="py-3 px-4 text-sm text-[var(--color-text-secondary)]">CLI</td>
+                  <td className="py-3 px-4 text-sm text-[var(--color-text-secondary)]">More capable LLM</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Benefits */}
+          <div className="mt-8 grid md:grid-cols-2 gap-4">
+            <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xl">🏠</span>
+                <h3 className="font-semibold text-[var(--color-text-primary)]">Web App Mode</h3>
+              </div>
+              <ul className="text-sm text-[var(--color-text-secondary)] space-y-1">
+                <li>• Runs entirely on your machine</li>
+                <li>• No API costs or internet required</li>
+                <li>• Visual tool trace panel</li>
+                <li>• Great for privacy-sensitive code</li>
+              </ul>
+            </div>
+            <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xl">🚀</span>
+                <h3 className="font-semibold text-[var(--color-text-primary)]">Claude Code Mode</h3>
+              </div>
+              <ul className="text-sm text-[var(--color-text-secondary)] space-y-1">
+                <li>• Superior reasoning capabilities</li>
+                <li>• True MCP protocol over subprocess</li>
+                <li>• Same sandboxed, read-only tools</li>
+                <li>• Integrates with Claude Code workflow</li>
+              </ul>
+            </div>
+          </div>
+
+          <p className="text-center text-sm text-[var(--color-text-tertiary)] mt-6">
+            See the{' '}
+            <a
+              href="https://github.com/shrimpy8/engineering-assistant/blob/main/docs/claude-code-integration.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[var(--color-accent)] hover:underline"
+            >
+              Claude Code Integration Guide
+            </a>
+            {' '}for setup instructions.
+          </p>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="py-16 px-4 bg-gradient-to-br from-[var(--color-accent)]/10 to-purple-600/10">
         <div className="max-w-2xl mx-auto text-center">

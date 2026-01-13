@@ -179,6 +179,49 @@ When you set a repository path, the app automatically:
 
 This eliminates the need to "warm up" with a structure question - you can ask "Explain the codebase" or "What's the tech stack?" immediately and get accurate answers.
 
+## Claude Code Integration
+
+The MCP server can also be used with [Claude Code](https://claude.ai/code) for a more powerful LLM experience.
+
+### Two Modes of Operation
+
+| Mode | LLM | Tools | Interface | Use Case |
+|------|-----|-------|-----------|----------|
+| **Web App** | Ollama (local) | Embedded MCP | Next.js UI | 100% private, local-first |
+| **Claude Code** | Claude (Anthropic) | MCP Server | CLI | More capable reasoning |
+
+### Quick Setup
+
+1. **Build the MCP server:**
+   ```bash
+   cd mcp-server && npm run build
+   ```
+
+2. **Add to Claude Code config** (`~/.claude.json`):
+   ```json
+   {
+     "mcpServers": {
+       "engineering-assistant": {
+         "type": "stdio",
+         "command": "node",
+         "args": [
+           "/path/to/engineering-assistant/mcp-server/dist/index.js",
+           "/path/to/repo/to/explore"
+         ]
+       }
+     }
+   }
+   ```
+
+3. **Restart Claude Code** and verify with `/mcp`
+
+4. **Ask questions explicitly:**
+   ```
+   Use the engineering-assistant MCP tools to tell me about this project
+   ```
+
+See [docs/claude-code-integration.md](docs/claude-code-integration.md) for the full setup guide.
+
 ## Development
 
 ```bash
@@ -218,6 +261,7 @@ npm run lint
 - [API Reference](docs/API.md) - REST endpoint documentation
 - [MCP Tools](docs/MCP.md) - Tool parameters and responses
 - [Architecture](docs/ARCHITECTURE.md) - System design and data flow
+- [Claude Code Integration](docs/claude-code-integration.md) - Use with Claude Code CLI
 - [LLM Tuning Journey](docs/llm-tuning-journey.md) - How we optimized LLM tool calling
 - [OpenAPI Spec](docs/openapi.yaml) - OpenAPI 3.0 specification
 
