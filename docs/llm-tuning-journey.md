@@ -416,5 +416,71 @@ Q5 now consistently uses 3-5 tools for deep code exploration:
 
 ---
 
+## Phase 7: Pre-fetch Repository Context (January 13, 2026)
+
+### Problem
+Users had to ask about structure first before other questions would work correctly. Asking "Explain the codebase" as the first question would sometimes fail because the model didn't know the project layout yet.
+
+The model would:
+- Output tool calls as JSON text instead of using native tool calling
+- Guess file paths instead of discovering what exists
+- Need a "warm-up" structure question to work properly
+
+### Solution: Context Pre-loading
+Modified the orchestrator to automatically fetch `get_repo_overview` when initializing, then inject it into the system prompt.
+
+**Files Modified:**
+- `src/lib/orchestrator/promptBuilder.ts` - Added `repoOverview` option and `setRepoOverview()` method
+- `src/lib/orchestrator/index.ts` - Added `prefetchRepoOverview()` in `initialize()`
+
+**Implementation:**
+```typescript
+// In Orchestrator.initialize()
+private async prefetchRepoOverview(): Promise<void> {
+  if (!this.mcpClient) return;
+
+  const result = await this.mcpClient.callTool('get_repo_overview', {
+    max_depth: 3,
+    include_stats: true,
+  });
+
+  const overview = JSON.stringify(result, null, 2);
+  this.promptBuilder.setRepoOverview(overview);
+}
+```
+
+**System Prompt Addition:**
+```
+## Repository Structure (Pre-loaded)
+
+Here is the repository structure you already know about. Use this to inform
+your tool calls - you don't need to call get_repo_overview again unless the
+user specifically asks for structure.
+
+[JSON overview data]
+```
+
+### Results
+| Metric | Before | After |
+|--------|--------|-------|
+| First question success | ~60% | **100%** |
+| Prompt tokens | ~1400 | ~3500 (includes overview) |
+| Need warm-up question | Yes | **No** |
+| Tool call reliability | Inconsistent | **Consistent** |
+
+### Key Learning
+**Pre-loading context is better than relying on the model to discover it.** By injecting the repository structure into the system prompt, the model:
+- Makes informed decisions about which files to read
+- Doesn't waste a tool round on `get_repo_overview`
+- Can answer complex questions correctly on the first try
+
+### Interview Talking Points
+
+9. **Context Pre-loading:** "We pre-fetch the repository structure when the user sets a repo path and inject it into the system prompt. This eliminates the 'cold start' problem where the model needs to discover the project layout before answering questions."
+
+10. **Trade-off Analysis:** "Pre-loading adds ~2000 tokens to every prompt, but the reliability improvement is worth it. Users can now ask any question first and get accurate answers."
+
+---
+
 *Document created: January 12, 2026*
-*Updated: January 12, 2026 (Phase 6 - Q5 question optimization)*
+*Updated: January 13, 2026 (Phase 7 - Pre-fetch repository context)*

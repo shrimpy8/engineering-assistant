@@ -15,6 +15,8 @@ A **local-first AI assistant** that helps developers understand codebases throug
 - **Read-Only Sandboxed Access** - Secure, non-destructive exploration
 - **SSE Streaming** - Real-time responses with tool lifecycle events
 - **MCP Protocol** - Built on Model Context Protocol for standardization
+- **Pre-loaded Context** - Repo structure is pre-fetched so the AI knows your project before you ask
+- **How It Works Page** - Visual documentation at `/how-it-works` explaining the architecture
 
 ### Quick Start Questions
 
@@ -79,7 +81,8 @@ npm run dev
 engineering-assistant/
 ├── src/
 │   ├── app/                 # Next.js App Router
-│   │   └── api/v1/          # REST API endpoints
+│   │   ├── api/v1/          # REST API endpoints
+│   │   └── how-it-works/    # Visual architecture documentation
 │   ├── components/          # React components
 │   │   ├── chat/            # Chat UI components
 │   │   ├── settings/        # Settings panel
@@ -150,6 +153,15 @@ ALLOWED_REPO_ROOT=/Users/yourname/projects
 
 > **Tip:** Keep temperature at 0.1-0.3 for reliable tool calling. Higher values may cause hallucinated file contents.
 
+### Pre-fetched Repository Context
+
+When you set a repository path, the app automatically:
+1. Fetches the repository structure using `get_repo_overview`
+2. Injects this context into the system prompt
+3. The AI knows your project layout before you ask any questions
+
+This eliminates the need to "warm up" with a structure question - you can ask "Explain the codebase" or "What's the tech stack?" immediately and get accurate answers.
+
 ## Development
 
 ```bash
@@ -189,6 +201,7 @@ npm run lint
 - [API Reference](docs/API.md) - REST endpoint documentation
 - [MCP Tools](docs/MCP.md) - Tool parameters and responses
 - [Architecture](docs/ARCHITECTURE.md) - System design and data flow
+- [LLM Tuning Journey](docs/llm-tuning-journey.md) - How we optimized LLM tool calling
 - [OpenAPI Spec](docs/openapi.yaml) - OpenAPI 3.0 specification
 
 ## License
