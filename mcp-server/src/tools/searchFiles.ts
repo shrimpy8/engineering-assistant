@@ -13,7 +13,8 @@ import {
   validateSearchFilesArgs,
   escapeRegex,
 } from '../validation/inputValidator.js';
-import { MCPError, MCPErrorCodes, SearchTimeoutError, toMCPError } from '../errors/index.js';
+import { logger } from '../logger.js';
+import { MCPError, MCPErrorCodes, toMCPError } from '../errors/index.js';
 
 /**
  * Search match result
@@ -84,6 +85,8 @@ async function searchInFile(
   validator: PathValidator
 ): Promise<SearchMatch[]> {
   try {
+    const fileStat = await fs.stat(filePath);
+    if (fileStat.size > 1_048_576) return []; // Skip files > 1MB
     const content = await fs.readFile(filePath, 'utf-8');
     const lines = content.split('\n');
     const matches: SearchMatch[] = [];
@@ -107,8 +110,8 @@ async function searchInFile(
     }
 
     return matches;
-  } catch {
-    // Skip files that can't be read (binary, permission issues, etc.)
+  } catch (err) {
+    logger.debug({ err, path: filePath }, 'Skipping unreadable file');
     return [];
   }
 }
@@ -143,14 +146,21 @@ export async function searchFiles(
     const fullPattern = path.join(validator.getAllowedRoot(), globPattern);
 
     // Get list of files to search
-    const files = await glob(fullPattern, {
+    const rawFiles = await glob(fullPattern, {
       nodir: true,
       absolute: true,
       ignore: DEFAULT_EXCLUDE,
     });
 
+    // Enforce sandbox: reject any glob result outside the allowed root
+    const allowedRoot = validator.getAllowedRoot();
+    const sandboxedFiles = rawFiles.filter((f) => {
+      const normalized = path.normalize(f);
+      return normalized.startsWith(allowedRoot + path.sep) || normalized === allowedRoot;
+    });
+
     // Filter out binary files
-    const textFiles = files.filter((f) => !shouldSkipFile(f));
+    const textFiles = sandboxedFiles.filter((f) => !shouldSkipFile(f));
     if (textFiles.length === 0) {
       throw new MCPError(
         MCPErrorCodes.NO_FILES_MATCHED,
@@ -166,9 +176,10 @@ export async function searchFiles(
 
     // Search files with timeout check
     for (const file of textFiles) {
-      // Check timeout
+      // Check timeout — return partial results rather than discarding them
       if (Date.now() - startTime > timeoutMs) {
-        throw new SearchTimeoutError(timeoutMs);
+        truncated = true;
+        break;
       }
 
       // Check if we have enough results

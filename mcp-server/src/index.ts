@@ -14,6 +14,7 @@
  */
 
 import { startServer } from './server.js';
+import { logger } from './logger.js';
 
 /**
  * Parse command line arguments
@@ -22,6 +23,7 @@ function parseArgs(): { repoPath: string } {
   const args = process.argv.slice(2);
 
   if (args.length === 0) {
+    // Usage printed to stderr before logger is available — acceptable at startup
     console.error('Usage: ea-mcp-server <repo-path>');
     console.error('');
     console.error('Arguments:');
@@ -55,7 +57,7 @@ async function main(): Promise<void> {
     const { repoPath } = parseArgs();
     await startServer(repoPath);
   } catch (error) {
-    console.error('Failed to start MCP server:', error);
+    logger.error({ err: error }, 'Failed to start MCP server');
     process.exit(1);
   }
 }

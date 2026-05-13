@@ -59,7 +59,10 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const filePath = searchParams.get('path') || '.';
     const read = searchParams.get('read') === 'true';
-    const repoPath = searchParams.get('repo') || process.cwd();
+    const repoPath = searchParams.get('repo');
+    if (!repoPath) {
+      return errorResponse(ErrorCodes.MISSING_PARAMETER, 'repo query parameter is required', ctx, { param: 'repo' });
+    }
     const repoRoot = await validateRepoPath(repoPath);
 
     // Security: Validate path is within repo (avoid prefix bypasses like /repo vs /repo2)
@@ -190,7 +193,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    logger.error({ error: error instanceof Error ? error.message : 'Unknown error', request_id: ctx.requestId }, 'Files API error');
+
 
     return errorResponse(
       ErrorCodes.INTERNAL_ERROR,

@@ -10,6 +10,7 @@ import * as path from 'path';
 import { PathValidator } from '../validation/pathValidator.js';
 import { validateRepoOverviewArgs } from '../validation/inputValidator.js';
 import { toMCPError } from '../errors/index.js';
+import { logger } from '../logger.js';
 
 /**
  * Directory tree node
@@ -134,8 +135,8 @@ async function buildTree(
             type: 'file',
             size: fileStat.size,
           });
-        } catch {
-          // Skip files we can't stat
+        } catch (err) {
+          logger.debug({ err, name: entry.name }, 'Skipping inaccessible file');
           node.children!.push({
             name: entry.name,
             type: 'file',
@@ -151,8 +152,8 @@ async function buildTree(
       }
       return a.name.localeCompare(b.name);
     });
-  } catch {
-    // If we can't read the directory, return empty children
+  } catch (err) {
+    logger.debug({ err }, 'Skipping unreadable directory');
   }
 
   return node;

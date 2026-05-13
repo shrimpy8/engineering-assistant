@@ -12,6 +12,7 @@
 
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { config } from '@/lib/config';
 import type {
   ListFilesParams,
   ReadFileParams,
@@ -115,6 +116,18 @@ export async function listFiles(
   const files: FileEntry[] = [];
   let truncated = false;
 
+  // Compile pattern regex once before the walk (avoids recompilation per entry)
+  let patternRegex: RegExp | undefined;
+  if (params.pattern) {
+    if (params.pattern.length > 200) throw new Error('Pattern too long');
+    const escaped = params.pattern
+      .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+      .replace(/\*\*/g, '.*')
+      .replace(/\*/g, '[^/]*')
+      .replace(/\?/g, '.');
+    patternRegex = new RegExp(`^${escaped}$`);
+  }
+
   async function walkDir(dirPath: string, depth: number): Promise<void> {
     if (depth > maxDepth || files.length >= MAX_FILES) {
       truncated = files.length >= MAX_FILES;
@@ -141,15 +154,7 @@ export async function listFiles(
         if (EXCLUDED_EXTENSIONS.has(ext)) continue;
 
         // Apply pattern filter if provided
-        if (params.pattern) {
-          const escaped = params.pattern
-            .replace(/[.+^${}()|[\]\\]/g, '\\$&')
-            .replace(/\*\*/g, '.*')
-            .replace(/\*/g, '[^/]*')
-            .replace(/\?/g, '.');
-          const regex = new RegExp(`^${escaped}$`);
-          if (!regex.test(entry.name)) continue;
-        }
+        if (patternRegex && !patternRegex.test(entry.name)) continue;
 
         const entryPath = path.join(dirPath, entry.name);
         const relativePath = path.relative(repoRoot, entryPath);
@@ -242,7 +247,7 @@ export async function readFile(
 export async function searchFiles(
   params: SearchFilesParams,
   repoRoot: string,
-  timeoutMs: number = 30000
+  timeoutMs: number = config.searchTimeoutMs
 ): Promise<SearchFilesResult> {
   const startTime = Date.now();
   const maxResults = params.max_results ?? MAX_SEARCH_RESULTS;

@@ -46,7 +46,7 @@ const SettingsSchema = z.object({
 
 const ChatRequestSchema = z
   .object({
-    messages: z.array(MessageSchema).min(1),
+    messages: z.array(MessageSchema).min(1).max(100),
     stream: z.boolean().default(true),
     settings: SettingsSchema.optional(),
     // Backward-compatible flat fields
@@ -301,8 +301,6 @@ export async function POST(request: NextRequest): Promise<Response> {
         details: error.details,
       });
     }
-
-    logger.error({ error: error instanceof Error ? error.message : 'Unknown error' }, 'Chat completions error');
 
     const errorMessage =
       error instanceof Error ? error.message : 'Internal server error';

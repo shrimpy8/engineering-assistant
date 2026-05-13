@@ -188,9 +188,9 @@ function loadConfig(): Config {
     console.warn(
       'WARNING: DEV_DISABLE_SANDBOX is enabled in production environment. This is a security risk!'
     );
-    // Only throw if not in build phase
-    if (typeof window !== 'undefined' || process.env.npm_lifecycle_event !== 'build') {
-      // At runtime, we could enforce this, but for now just warn
+    // Only throw if not in build phase (pino not yet initialized at build time)
+    if (process.env.npm_lifecycle_event !== 'build') {
+      throw new Error('DEV_DISABLE_SANDBOX cannot be enabled in production');
     }
   }
 

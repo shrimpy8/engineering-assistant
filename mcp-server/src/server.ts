@@ -13,6 +13,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 
 import { config } from './config/index.js';
+import { logger } from './logger.js';
 import { createPathValidator } from './validation/pathValidator.js';
 import {
   listFiles,
@@ -22,7 +23,10 @@ import {
   toolDefinitions,
   TOOL_NAMES,
 } from './tools/index.js';
-import { MCPError, toMCPError } from './errors/index.js';
+import { MCPError, MCPErrorCodes, toMCPError } from './errors/index.js';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const { version: serverVersion } = require('../package.json') as { version: string };
 
 /**
  * Create and configure the MCP server
@@ -35,7 +39,7 @@ export function createServer(repoPath: string): Server {
   const server = new Server(
     {
       name: 'engineering-assistant-mcp',
-      version: '0.1.0',
+      version: serverVersion,
     },
     {
       capabilities: {
@@ -82,7 +86,7 @@ export function createServer(repoPath: string): Server {
 
         default:
           throw new MCPError(
-            'invalid_arguments' as never,
+            MCPErrorCodes.INVALID_ARGUMENTS,
             `Unknown tool: ${name}`
           );
       }
@@ -127,15 +131,11 @@ export async function startServer(repoPath: string): Promise<void> {
   const server = createServer(repoPath);
   const transport = new StdioServerTransport();
 
-  // Log startup (to stderr so it doesn't interfere with protocol)
-  console.error(`MCP Server starting for repo: ${repoPath}`);
-  console.error(`Allowed root: ${config.allowedRoot || '(any)'}`);
-  console.error(`Max file size: ${config.maxFileSize} bytes`);
-  console.error(`Max search results: ${config.maxSearchResults}`);
+  logger.info({ repoPath, allowedRoot: config.allowedRoot ?? '(any)', maxFileSize: config.maxFileSize, maxSearchResults: config.maxSearchResults }, 'MCP Server starting');
 
   await server.connect(transport);
 
-  console.error('MCP Server ready');
+  logger.info('MCP Server ready');
 }
 
 export default createServer;
