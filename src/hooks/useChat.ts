@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import type { Message, ChatSettings, SSEEvent, ToolTraceEvent, Usage } from '@/types';
 
 interface UseChatReturn {
@@ -22,7 +22,7 @@ interface UseChatReturn {
  * Generate a unique ID for messages
  */
 function generateId(): string {
-  return `msg_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+  return `msg_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').substring(0, 8)}`;
 }
 
 /**
@@ -43,6 +43,8 @@ export function useChat(): UseChatReturn {
   const requestStartRef = useRef<number | null>(null);
   const firstTokenSeenRef = useRef(false);
   const toolDurationRef = useRef(0);
+  const messagesRef = useRef<Message[]>([]);
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
 
   const addToolTraceEvent = useCallback((event: ToolTraceEvent) => {
     setToolTraceEvents((prev) => {
@@ -109,7 +111,7 @@ export function useChat(): UseChatReturn {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          messages: [...messages, { role: 'user', content: content.trim() }].map((m) => ({
+          messages: [...messagesRef.current, { role: 'user', content: content.trim() }].map((m) => ({
             role: m.role,
             content: m.content,
           })),
@@ -252,6 +254,7 @@ export function useChat(): UseChatReturn {
                   break;
               }
             } catch (parseError) {
+              // TODO(3): Route to client-side error reporter when observability is added
               console.error('Failed to parse SSE event:', parseError);
             }
           }
@@ -273,7 +276,7 @@ export function useChat(): UseChatReturn {
       setIsStreaming(false);
       abortControllerRef.current = null;
     }
-  }, [messages, addToolTraceEvent]);
+  }, [addToolTraceEvent]);
 
   const clearMessages = useCallback(() => {
     setMessages([]);

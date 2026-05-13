@@ -34,7 +34,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   componentDidCatch(error: Error, errorInfo: { componentStack: string }) {
     this.setState({ errorInfo });
-    // Log error for debugging
+    // TODO(3): Route to client-side error reporter when observability is added
     console.error('ErrorBoundary caught an error:', error, errorInfo);
   }
 

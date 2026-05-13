@@ -13,6 +13,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { createResponseContext, successResponse, errorResponse } from '@/lib/api';
 import { logRequestStart, logRequestEnd, logRequestError } from '@/lib/api/logging';
+import { logger } from '@/lib/logger';
 import { ErrorCodes } from '@/lib/errors/codes';
 import { config } from '@/lib/config';
 import {
@@ -117,8 +118,10 @@ function formatContentChunk(
 // Request Handler
 // =============================================================================
 
+import { randomUUID } from 'crypto';
+
 function generateId(): string {
-  return `chatcmpl-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  return `chatcmpl-${randomUUID().replace(/-/g, '').substring(0, 16)}`;
 }
 
 /**
@@ -299,7 +302,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       });
     }
 
-    console.error('Chat completions error:', error);
+    logger.error({ error: error instanceof Error ? error.message : 'Unknown error' }, 'Chat completions error');
 
     const errorMessage =
       error instanceof Error ? error.message : 'Internal server error';

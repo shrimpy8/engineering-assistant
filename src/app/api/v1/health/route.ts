@@ -8,11 +8,10 @@
  */
 
 import { NextRequest } from 'next/server';
-import { OllamaClient } from '@/lib/ollama/client';
-import { config } from '@/lib/config';
+import { ollamaClient } from '@/lib/ollama/client';
 import { createResponseContext, successResponse } from '@/lib/api';
 import { logRequestStart, logRequestEnd, logRequestError } from '@/lib/api/logging';
-import type { HealthData, ServiceStatus } from '@/types/api';
+import type { HealthData } from '@/types/api';
 
 /**
  * GET /api/v1/health
@@ -43,7 +42,7 @@ export async function GET(request: NextRequest) {
 
   const healthData: HealthData = {
     status: 'healthy',
-    version: '0.1.0',
+    version: process.env.npm_package_version || '0.1.0',
     services: {
       ollama: { status: 'disconnected' },
       mcp_server: { status: 'connected', latency_ms: 0 }, // MCP is local, always available
@@ -53,10 +52,9 @@ export async function GET(request: NextRequest) {
   // Check Ollama health
   try {
     const ollamaStart = Date.now();
-    const ollama = new OllamaClient({ baseUrl: config.ollamaBaseUrl });
-    const isHealthy = await ollama.health();
+    const healthResult = await ollamaClient.health();
 
-    if (isHealthy) {
+    if (healthResult.status === 'ok') {
       healthData.services.ollama = {
         status: 'connected',
         latency_ms: Date.now() - ollamaStart,
@@ -64,7 +62,7 @@ export async function GET(request: NextRequest) {
     } else {
       healthData.services.ollama = {
         status: 'disconnected',
-        error: 'Ollama server not responding',
+        error: healthResult.error || 'Ollama server not responding',
       };
       healthData.status = 'degraded';
     }

@@ -247,6 +247,7 @@ export async function createMCPClient(
 // Singleton Client Pool
 // =============================================================================
 
+const MAX_POOL_SIZE = 20;
 const clientPool = new Map<string, MCPClient>();
 
 /**
@@ -268,6 +269,15 @@ export async function getMCPClient(repoRoot: string): Promise<MCPClient> {
   client.on('disconnected', () => {
     clientPool.delete(repoRoot);
   });
+
+  if (clientPool.size >= MAX_POOL_SIZE) {
+    const oldestKey = clientPool.keys().next().value;
+    if (oldestKey !== undefined) {
+      const oldClient = clientPool.get(oldestKey);
+      clientPool.delete(oldestKey);
+      oldClient?.disconnect().catch(() => {});
+    }
+  }
 
   clientPool.set(repoRoot, client);
   return client;

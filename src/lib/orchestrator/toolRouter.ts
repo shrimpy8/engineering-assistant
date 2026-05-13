@@ -6,19 +6,44 @@
  */
 
 import { randomUUID } from 'crypto';
+import { z } from 'zod';
 import type { MCPClient } from '@/lib/mcp/client';
 import type {
   ToolName,
   ToolResult,
   ToolCallEvent,
   ToolCallStatus,
-  ListFilesParams,
-  ReadFileParams,
-  SearchFilesParams,
-  RepoOverviewParams,
 } from '@/lib/mcp/types';
 import { logger } from '@/lib/logger';
 import { isValidToolName } from './promptBuilder';
+
+// Runtime validation schemas for LLM-generated tool arguments
+const ListFilesSchema = z.object({
+  directory: z.string().optional(),
+  pattern: z.string().optional(),
+  max_depth: z.number().optional(),
+  include_hidden: z.boolean().optional(),
+}).passthrough();
+
+const ReadFileSchema = z.object({
+  path: z.string(),
+  max_bytes: z.number().optional(),
+  encoding: z.enum(['utf-8', 'base64']).optional(),
+}).passthrough();
+
+const SearchFilesSchema = z.object({
+  pattern: z.string(),
+  is_regex: z.boolean().optional(),
+  glob: z.string().optional(),
+  max_results: z.number().optional(),
+  context_lines: z.number().optional(),
+  case_sensitive: z.boolean().optional(),
+}).passthrough();
+
+const RepoOverviewSchema = z.object({
+  max_depth: z.number().optional(),
+  include_stats: z.boolean().optional(),
+}).passthrough();
 
 // =============================================================================
 // Types
@@ -280,16 +305,16 @@ export class ToolRouter {
   ): Promise<ToolResult> {
     switch (name) {
       case 'list_files':
-        return this.mcpClient.listFiles(args as unknown as ListFilesParams);
+        return this.mcpClient.listFiles(ListFilesSchema.parse(args));
 
       case 'read_file':
-        return this.mcpClient.readFile(args as unknown as ReadFileParams);
+        return this.mcpClient.readFile(ReadFileSchema.parse(args));
 
       case 'search_files':
-        return this.mcpClient.searchFiles(args as unknown as SearchFilesParams);
+        return this.mcpClient.searchFiles(SearchFilesSchema.parse(args));
 
       case 'get_repo_overview':
-        return this.mcpClient.getRepoOverview(args as unknown as RepoOverviewParams);
+        return this.mcpClient.getRepoOverview(RepoOverviewSchema.parse(args));
 
       default:
         throw new Error(`Unknown tool: ${name}`);

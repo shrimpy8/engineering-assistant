@@ -15,6 +15,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { createResponseContext, successResponse, errorResponse } from '@/lib/api';
 import { logRequestStart, logRequestEnd, logRequestError } from '@/lib/api/logging';
+import { logger } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
 import { validateRepoPath } from '@/lib/api/validation';
 import { ErrorCodes } from '@/lib/errors/codes';
@@ -189,7 +190,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    console.error('Files API error:', error);
+    logger.error({ error: error instanceof Error ? error.message : 'Unknown error', request_id: ctx.requestId }, 'Files API error');
 
     return errorResponse(
       ErrorCodes.INTERNAL_ERROR,

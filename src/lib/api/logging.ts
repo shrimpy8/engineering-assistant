@@ -5,7 +5,7 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { logger } from '@/lib/logger';
+import { logger, serializeError } from '@/lib/logger';
 import type { ResponseContext } from './response';
 
 /**
@@ -43,7 +43,8 @@ export function logRequestError(ctx: ResponseContext, error: unknown): void {
   logger.error(
     {
       request_id: ctx.requestId,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: serializeError(error),
+      duration_ms: Date.now() - ctx.startTime,
     },
     'Request failed'
   );

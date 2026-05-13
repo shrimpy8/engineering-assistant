@@ -21,6 +21,7 @@ export function CopyButton({ text, label, className = '' }: CopyButtonProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
+      // TODO(3): Route to client-side error reporter when observability is added
       console.error('Failed to copy:', err);
     }
   };

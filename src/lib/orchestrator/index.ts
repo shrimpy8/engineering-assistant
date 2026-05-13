@@ -51,6 +51,7 @@ export interface OrchestratorConfig {
   temperature?: number;
   maxTokens?: number;
   maxToolIterations?: number;
+  maxToolRounds?: number;
 }
 
 /**
@@ -100,6 +101,7 @@ export class Orchestrator {
   constructor(orchestratorConfig: OrchestratorConfig) {
     this.config = {
       maxToolIterations: 5,
+      maxToolRounds: 2,
       ...orchestratorConfig,
     };
 
@@ -207,7 +209,7 @@ export class Orchestrator {
     let totalCompletionTokens = 0;
     let iterations = 0;
     let toolRounds = 0;
-    const MAX_TOOL_ROUNDS = 2; // Allow 2 tool rounds for "try X, if fails try Y" pattern
+    const MAX_TOOL_ROUNDS = this.config.maxToolRounds!;
 
     try {
       while (iterations < (this.config.maxToolIterations || 5)) {
@@ -223,10 +225,8 @@ export class Orchestrator {
         totalCompletionTokens += response.eval_count || 0;
 
         // Check for tool calls (only possible if tools were passed)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if (toolRounds < MAX_TOOL_ROUNDS && hasToolCalls(response as any) && this.toolRouter) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const toolCalls = parseToolCalls(response as any);
+        if (toolRounds < MAX_TOOL_ROUNDS && hasToolCalls(response) && this.toolRouter) {
+          const toolCalls = parseToolCalls(response);
 
           // Execute tool calls (events are emitted via toolRouter)
           const results = await this.toolRouter.executeToolCalls(toolCalls);
@@ -322,7 +322,7 @@ Now provide a helpful summary of what you found.`,
     let totalCompletionTokens = 0;
     let iterations = 0;
     let toolRounds = 0;
-    const MAX_TOOL_ROUNDS = 2; // Allow 2 tool rounds for "try X, if fails try Y" pattern
+    const MAX_TOOL_ROUNDS = this.config.maxToolRounds!;
 
     while (iterations < (this.config.maxToolIterations || 5)) {
       iterations++;
@@ -337,10 +337,8 @@ Now provide a helpful summary of what you found.`,
       totalCompletionTokens += response.eval_count || 0;
 
       // Check for tool calls (only possible if tools were passed)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (toolRounds < MAX_TOOL_ROUNDS && hasToolCalls(response as any) && this.toolRouter) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const toolCalls = parseToolCalls(response as any);
+      if (toolRounds < MAX_TOOL_ROUNDS && hasToolCalls(response) && this.toolRouter) {
+        const toolCalls = parseToolCalls(response);
         const results = await this.toolRouter.executeToolCalls(toolCalls);
         allToolCalls.push(...results);
         toolRounds++;
@@ -436,6 +434,12 @@ Now provide a helpful summary of what you found.`,
   ): Promise<{
     message?: {
       content?: string;
+      tool_calls?: Array<{
+        function?: {
+          name: string;
+          arguments: string | Record<string, unknown>;
+        };
+      }>;
     };
     prompt_eval_count?: number;
     eval_count?: number;
