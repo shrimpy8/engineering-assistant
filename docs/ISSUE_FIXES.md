@@ -851,3 +851,419 @@ if (toolRounds < MAX_TOOL_ROUNDS && hasToolCalls(response) && this.toolRouter) {
 - `cd mcp-server && npx vitest run`: 62/65 tests pass — 3 pre-existing failures in `inputValidator.test.ts` (not caused by these changes; confirmed by checking they fail on clean `main` too)
 
 **Footer:** All 30 audit issues addressed — 27 fixed surgically, 3 deferred as structural refactors (Issues #13, #27, #28).
+
+---
+
+## Second Review — Issues and Fixes
+
+**Date:** 2026-05-13
+**Auditor:** Claude Opus
+**Scope:** Post-fix codebase scan — web app (`src/`) + MCP server (`mcp-server/src/`)
+
+| Severity | Count |
+|----------|-------|
+| High (P1) | 5 |
+| Medium (P2) | 12 |
+| Low (P3) | 7 |
+| **Total** | **24** |
+
+---
+
+### High (P1)
+
+#### SR-1: Orchestrator cleanup defeats MCP client pool
+- **File:** `src/lib/orchestrator/index.ts:485-491`
+- **Category:** Resource Leak / Logic
+- **Severity:** P1
+- **Problem:** `cleanup()` calls `this.mcpClient.disconnect()` which removes the client from the shared `clientPool`. Since every request creates an orchestrator and calls cleanup in its `finally` block, the pool is effectively useless — every request disconnects the pooled client, forcing the next request to reconnect from scratch.
+- **Impact:** Unnecessary reconnection overhead on every request; pool provides zero benefit.
+- **Surgical Fix:**
+```typescript
+// Before (lines 485-491):
+async cleanup(): Promise<void> {
+  if (this.mcpClient) {
+    await this.mcpClient.disconnect();
+    this.mcpClient = null;
+    this.toolRouter = null;
+  }
+}
+
+// After:
+async cleanup(): Promise<void> {
+  // Don't disconnect pooled clients — they're shared across requests.
+  this.mcpClient = null;
+  this.toolRouter = null;
+}
+```
+
+#### SR-2: Glob-to-regex still vulnerable to ReDoS via nested quantifiers
+- **File:** `src/lib/tools/core.ts:145-150`, `mcp-server/src/shared/core.ts:144-149`
+- **Category:** Security
+- **Severity:** P1
+- **Problem:** While Issue #1 added metacharacter escaping, the `**` → `.*` substitution still produces unbounded `.*` in the regex. A pattern like `**/**/**/**` produces `.*\/.*\/.*\/.*` which causes catastrophic backtracking on long non-matching strings. Additionally, the regex is recompiled on every directory entry inside `walkDir` instead of once before the walk.
+- **Impact:** Denial of service via crafted glob pattern.
+- **Surgical Fix:**
+```typescript
+// Before (inside walkDir loop):
+if (params.pattern) {
+  const escaped = params.pattern.replace(...)...;
+  const regex = new RegExp(`^${escaped}$`);
+  if (!regex.test(entry.name)) continue;
+}
+
+// After — compile once before walk + cap pattern length:
+let patternRegex: RegExp | undefined;
+if (params.pattern) {
+  if (params.pattern.length > 200) throw new Error('Pattern too long');
+  const escaped = params.pattern
+    .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+    .replace(/\*\*/g, '.*')
+    .replace(/\*/g, '[^/]*')
+    .replace(/\?/g, '.');
+  patternRegex = new RegExp(`^${escaped}$`);
+}
+// Inside walkDir:
+if (patternRegex && !patternRegex.test(entry.name)) continue;
+```
+
+#### SR-3: `readFile` tool loads entire file before truncation
+- **File:** `mcp-server/src/tools/readFile.ts:140-154`
+- **Category:** Resource Leak
+- **Severity:** P1
+- **Problem:** `fs.readFile(filePath)` loads the entire file into memory even when `params.max_bytes` requests only a small portion. `effectiveMaxSize` is computed but only used to truncate after the full file is already in memory. A 500MB file requested with `max_bytes: 100` loads all 500MB.
+- **Impact:** Memory spikes proportional to file size, not requested size. OOM risk under concurrent requests.
+- **Surgical Fix:**
+```typescript
+// Before (line 154):
+const buffer = await fs.readFile(filePath);
+
+// After — read only what's needed:
+const handle = await fs.open(filePath, 'r');
+try {
+  const readSize = Math.min(stat.size, effectiveMaxSize);
+  const buffer = Buffer.alloc(readSize);
+  await handle.read(buffer, 0, readSize, 0);
+  // ... rest of logic using buffer
+} finally {
+  await handle.close();
+}
+```
+
+#### SR-4: Broken glob escaping in `shared/core.ts` searchFiles
+- **File:** `mcp-server/src/shared/core.ts:291-296`
+- **Category:** Logic Bug / Security
+- **Severity:** P1
+- **Problem:** The glob-to-regex conversion in `searchFiles` escapes `*` to `\\*` first, then tries to un-escape `\\*\\*` back to `.*`. But the replacement chain is broken: `**` becomes `\\*\\*` in step 1, then the second replacement looks for the wrong double-escaped string. This means `**` glob patterns silently don't work in `shared/core.ts`.
+- **Impact:** Glob filtering is silently broken for `**` patterns; also susceptible to ReDoS.
+- **Surgical Fix:**
+```typescript
+// After — correct order (handle ** before *):
+const safeGlob = params.glob
+  .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+  .replace(/\*\*/g, '.*')
+  .replace(/\*/g, '[^/]*')
+  .replace(/\?/g, '.');
+```
+
+#### SR-5: Glob path traversal in MCP `searchFiles` tool
+- **File:** `mcp-server/src/tools/searchFiles.ts:143`
+- **Category:** Security
+- **Severity:** P1
+- **Problem:** User-supplied `params.glob` is joined directly with the repo root via `path.join(validator.getAllowedRoot(), globPattern)`. A glob like `../../etc/passwd` resolves outside the sandbox via `path.join`. The `glob()` results are passed to `searchInFile` without re-validating they're within the allowed root.
+- **Impact:** Attacker can search files outside the repository root.
+- **Surgical Fix:**
+```typescript
+// After getting files from glob (line 146-149), filter to sandbox:
+const safeFiles = files.filter(f => {
+  const normalized = path.normalize(f);
+  return normalized.startsWith(validator.getAllowedRoot() + path.sep)
+    || normalized === validator.getAllowedRoot();
+});
+```
+
+---
+
+### Medium (P2)
+
+#### SR-6: `console.error` throughout MCP server — no structured logger
+- **File:** `mcp-server/src/index.ts:25-58`, `mcp-server/src/server.ts:131-138`, `mcp-server/src/config/index.ts:42-43`
+- **Category:** Observability
+- **Severity:** P2
+- **Problem:** 19 occurrences of `console.error` across 3 MCP server files. The config defines a `logLevel` field (from `MCP_LOG_LEVEL`) but no logger exists — it's dead config. Operational logs in `server.ts` and config errors are unstructured.
+- **Impact:** No structured logging, no log level control, no correlation IDs in the MCP server.
+- **Surgical Fix:** Create `mcp-server/src/logger.ts` using `pino`, initialize with `config.logLevel`, replace `console.error` calls in `server.ts` and `config/index.ts`.
+
+#### SR-7: Dead/incomplete `DEV_DISABLE_SANDBOX` production guard
+- **File:** `src/lib/config/index.ts:191-194`
+- **Category:** Security
+- **Severity:** P2
+- **Problem:** The production guard for `DEV_DISABLE_SANDBOX` has an empty if-body with a comment "for now just warn". The warning already fires on line 189, and the conditional block does nothing. This is dead code masking a security gap.
+- **Impact:** `DEV_DISABLE_SANDBOX=true` in production is warned about but never blocked.
+- **Surgical Fix:**
+```typescript
+// Before (lines 191-194):
+if (typeof window !== 'undefined' || process.env.npm_lifecycle_event !== 'build') {
+  // At runtime, we could enforce this, but for now just warn
+}
+
+// After — enforce or remove dead code:
+throw new ConfigurationError('DEV_DISABLE_SANDBOX cannot be enabled in production', []);
+```
+
+#### SR-8: `as unknown as` casts in `mcp/client.ts` callTool bypass validation
+- **File:** `src/lib/mcp/client.ts:110-119`
+- **Category:** Type Safety
+- **Severity:** P2
+- **Problem:** Four `as unknown as` casts in the `callTool` switch blindly cast arguments. While `toolRouter.ts` validates with Zod, if `callTool` is called directly (bypassing the router), no validation occurs.
+- **Impact:** Type safety bypassed at the MCP client boundary for any direct caller.
+- **Surgical Fix:** Add a documenting comment explaining validation happens in `toolRouter.ts`, or move Zod validation into `callTool`.
+
+#### SR-9: Hardcoded model fallback in `createOrchestrator`
+- **File:** `src/lib/orchestrator/index.ts:505`
+- **Category:** Configuration
+- **Severity:** P2
+- **Problem:** `model: config.model || 'llama3.1:8b'` uses a hardcoded fallback while the centralized config has `config.ollamaDefaultModel` with the same default. If the env var changes, this fallback bypasses it.
+- **Impact:** `OLLAMA_DEFAULT_MODEL` env var has no effect when `model` is undefined.
+- **Surgical Fix:**
+```typescript
+// Before:
+model: config.model || 'llama3.1:8b',
+
+// After:
+import { config as appConfig } from '@/lib/config';
+model: config.model || appConfig.ollamaDefaultModel,
+```
+
+#### SR-10: Unbounded messages array — DoS risk
+- **File:** `src/app/api/v1/chat/completions/route.ts:141`
+- **Category:** Input Validation
+- **Severity:** P2
+- **Problem:** The Zod schema validates message structure with `.min(1)` but has no max constraint. A malicious client can send thousands of messages with huge content strings.
+- **Impact:** Memory exhaustion from a single crafted request.
+- **Surgical Fix:**
+```typescript
+// Before:
+messages: z.array(MessageSchema).min(1),
+
+// After:
+messages: z.array(MessageSchema).min(1).max(100),
+```
+
+#### SR-11: `process.cwd()` fallback exposes server directory
+- **File:** `src/app/api/v1/files/route.ts:62`
+- **Category:** Security / Input Validation
+- **Severity:** P2
+- **Problem:** `const repoPath = searchParams.get('repo') || process.cwd()` exposes the server's working directory when no `repo` param is provided. Also, `src/app/api/v1/prompt/route.ts:29` uses `as 'auto' | 'manual'` without validating the actual value.
+- **Impact:** Unauthenticated access to server CWD file listing.
+- **Surgical Fix:**
+```typescript
+// Before:
+const repoPath = searchParams.get('repo') || process.cwd();
+
+// After:
+const repoPath = searchParams.get('repo');
+if (!repoPath) {
+  return errorResponse(ErrorCodes.MISSING_PARAMETER, 'repo query parameter is required', ctx, { param: 'repo' });
+}
+```
+
+#### SR-12: MCP `searchFiles` missing file size guard
+- **File:** `mcp-server/src/tools/searchFiles.ts:87`
+- **Category:** Resource Leak
+- **Severity:** P2
+- **Problem:** `searchInFile` reads entire files with `fs.readFile(filePath, 'utf-8')` and no size check. Unlike `shared/core.ts` which has a 1MB guard, this tool implementation has none — a 500MB text file will be loaded entirely.
+- **Impact:** OOM risk on large text files.
+- **Surgical Fix:**
+```typescript
+// Add before line 87:
+const fileStat = await fs.stat(filePath);
+if (fileStat.size > 1_048_576) return []; // Skip files > 1MB
+```
+
+#### SR-13: `as never` type cast in MCP server
+- **File:** `mcp-server/src/server.ts:85`
+- **Category:** Type Safety
+- **Severity:** P2
+- **Problem:** `'invalid_arguments' as never` casts a string to bypass the `MCPErrorCode` type. The constant `MCPErrorCodes.INVALID_ARGUMENTS` exists and equals the same string — the cast is unnecessary and hides potential type mismatches.
+- **Surgical Fix:**
+```typescript
+// Before:
+throw new MCPError('invalid_arguments' as never, `Unknown tool: ${name}`);
+
+// After:
+throw new MCPError(MCPErrorCodes.INVALID_ARGUMENTS, `Unknown tool: ${name}`);
+```
+
+#### SR-14: Timeout discards partial search results in MCP
+- **File:** `mcp-server/src/tools/searchFiles.ts:168-172`
+- **Category:** Logic Bug
+- **Severity:** P2
+- **Problem:** On timeout, the code throws `SearchTimeoutError` which discards all results found so far. If 45 matches were found in 9 seconds and timeout hits at 10 seconds, the user gets zero results instead of 45.
+- **Impact:** Users lose partial results they waited for.
+- **Surgical Fix:**
+```typescript
+// Before:
+if (Date.now() - startTime > timeoutMs) {
+  throw new SearchTimeoutError(timeoutMs);
+}
+
+// After:
+if (Date.now() - startTime > timeoutMs) {
+  truncated = true;
+  break;
+}
+```
+
+#### SR-15: `chatStream` timeout not cleared in `finally`
+- **File:** `src/lib/ollama/client.ts:258-259`
+- **Category:** Resource Leak
+- **Severity:** P2
+- **Problem:** `clearTimeout(timeoutId)` is in the try block (line 258) and catch block (line 260) but not in a `finally` block. If the generator is abandoned early (consumer stops iterating), the timeout remains active. Also, the timeout covers the entire stream duration — a long-running but healthy stream gets killed after `timeoutMs`.
+- **Impact:** Timer resource leak on abandoned generators; healthy long streams killed.
+- **Surgical Fix:**
+```typescript
+// Consolidate into finally:
+} finally {
+  clearTimeout(timeoutId);
+}
+```
+
+#### SR-16: Tool definitions duplicated in MCP server index
+- **File:** `mcp-server/src/tools/index.ts:16-21`
+- **Category:** DRY
+- **Severity:** P2
+- **Problem:** Inline `toolDefinitions` array duplicates schemas already exported from individual tool files. The inline versions lack constraints (e.g., `max_depth` missing `minimum: 1, maximum: 10`). `server.ts` uses only the inline versions.
+- **Impact:** Two sources of truth; inline definitions lack constraints from per-file versions.
+- **Surgical Fix:**
+```typescript
+// After:
+import { listFilesDefinition } from './listFiles.js';
+import { readFileDefinition } from './readFile.js';
+import { searchFilesDefinition } from './searchFiles.js';
+import { repoOverviewDefinition } from './repoOverview.js';
+
+export const toolDefinitions = [
+  listFilesDefinition, readFileDefinition,
+  searchFilesDefinition, repoOverviewDefinition,
+];
+```
+
+#### SR-17: `shared/` module is dead code within MCP server
+- **File:** `mcp-server/src/shared/core.ts`, `mcp-server/src/shared/types.ts`
+- **Category:** Dead Code / DRY
+- **Severity:** P2
+- **Problem:** `shared/core.ts` contains complete implementations of all four tools, but `server.ts` imports from `tools/index.ts`, not `shared/`. The `shared/` module is imported by nobody within `mcp-server/src/`. Meanwhile `tools/*.ts` has separate, diverging implementations.
+- **Impact:** Two diverging codepaths for the same logic; bugs fixed in one aren't fixed in the other (see SR-12).
+- **Surgical Fix:** Either delete `shared/` from the MCP server (if it belongs to the web app only) or make `tools/*.ts` delegate to `shared/core.ts`.
+
+---
+
+### Low (P3)
+
+#### SR-18: Duplicate error logs in API routes
+- **File:** `src/app/api/v1/chat/completions/route.ts:305`, `src/app/api/v1/files/read/route.ts:151`, `src/app/api/v1/files/route.ts:193`
+- **Category:** Logging
+- **Severity:** P3
+- **Problem:** After calling `logRequestError(ctx, error)`, each route also calls `logger.error(...)` separately — creating duplicate error log entries for the same failure.
+- **Surgical Fix:** Remove the `logger.error(...)` calls; `logRequestError` already handles it.
+
+#### SR-19: `searchFiles` timeout config not threaded from settings
+- **File:** `src/lib/tools/core.ts:253`
+- **Category:** Configuration
+- **Severity:** P3
+- **Problem:** `searchFiles` has `timeoutMs = 30000` default parameter, but `config.searchTimeoutMs` exists with the same default. The config value is never passed through.
+- **Impact:** Changing `SEARCH_TIMEOUT_MS` env var has no effect.
+- **Surgical Fix:** Import and use `config.searchTimeoutMs` as the default.
+
+#### SR-20: Unstructured `console.error` in config startup
+- **File:** `src/lib/config/index.ts:175-176, 189, 199`
+- **Category:** Logging
+- **Severity:** P3
+- **Problem:** Config validation runs before pino is initialized, so `console.error`/`console.warn` is used. The output is unstructured.
+- **Surgical Fix:** Use `console.error(JSON.stringify({...}))` for structured-ish output, or accept with a comment explaining the circular dependency.
+
+#### SR-21: Silent `catch` blocks in MCP server tools
+- **File:** `mcp-server/src/shared/core.ts:170`, `mcp-server/src/tools/listFiles.ts:99`, `mcp-server/src/tools/searchFiles.ts:110`, `mcp-server/src/tools/repoOverview.ts:137,154`
+- **Category:** Error Handling
+- **Severity:** P3
+- **Problem:** Bare `catch` blocks silently swallow errors (e.g., `catch { // Skip files we can't stat }`). No logging makes it impossible to diagnose why files are unexpectedly skipped.
+- **Surgical Fix:** Log at DEBUG level: `catch (error) { logger.debug({ err: error, path: entryPath }, 'Skipping inaccessible file'); }`
+
+#### SR-22: Duplicate null byte check in `pathValidator`
+- **File:** `mcp-server/src/validation/pathValidator.ts:57-59`
+- **Category:** Dead Code
+- **Severity:** P3
+- **Problem:** Null byte (`\0`) is checked both in `SUSPICIOUS_PATTERNS` (line 19) and explicitly at lines 57-59. The second check is redundant.
+- **Surgical Fix:** Remove lines 57-59.
+
+#### SR-23: Duplicate type definitions in MCP server
+- **File:** `mcp-server/src/shared/types.ts` vs `mcp-server/src/tools/*.ts`
+- **Category:** DRY
+- **Severity:** P3
+- **Problem:** Types like `FileEntry`, `SearchMatch`, `DirectoryNode` are defined in both `shared/types.ts` and individual tool files. Neither references the other.
+- **Impact:** Type drift risk.
+- **Surgical Fix:** Have tool files import types from `shared/types.ts`.
+
+#### SR-24: Hardcoded version `'0.1.0'` in MCP server
+- **File:** `mcp-server/src/server.ts:38`
+- **Category:** Configuration
+- **Severity:** P3
+- **Problem:** Server version is hardcoded instead of reading from `package.json`.
+- **Surgical Fix:** Import version from `package.json` or use a build-time constant.
+
+#### SR-25: Dead `FlowNode`/`FlowArrow` components
+- **File:** `src/app/how-it-works/page.tsx:496-519`
+- **Category:** Dead Code
+- **Severity:** P3
+- **Problem:** `FlowNode` and `FlowArrow` components are defined but never used. Leftovers from an earlier version of the architecture diagram.
+- **Surgical Fix:** Remove both components.
+
+---
+
+## Second Review — Resolutions
+
+**Fixed by:** Claude Sonnet 4.6 on 2026-05-13
+**Branch:** `fix/second-review-24-issues`
+**Validation:** Next.js build clean · MCP server TypeScript build clean · all existing tests pass
+
+---
+
+### High (P1) — 5 issues
+
+| # | Issue | Status | Notes |
+|---|-------|--------|-------|
+| SR-1 | Orchestrator cleanup defeats MCP client pool | **FIXED** | `src/lib/orchestrator/index.ts` — removed `mcpClient.disconnect()` from `cleanup()`; now only nulls the references so the pool entry survives. |
+| SR-2 | Glob-to-regex recompiled inside walkDir loop (ReDoS + perf) | **FIXED** | Both `src/lib/tools/core.ts` and `mcp-server/src/shared/core.ts` — regex compiled once before `walkDir` with a 200-char pattern length cap; loop now references `patternRegex` variable. |
+| SR-3 | `readFile` loads entire file before truncation | **FIXED** | `mcp-server/src/tools/readFile.ts` — replaced `fs.readFile(filePath)` with `fs.open` + `handle.read(buffer, 0, readSize, 0)` in a `try/finally` with `handle.close()`. |
+| SR-4 | Broken glob escaping in `shared/core.ts` searchFiles | **FIXED** | `mcp-server/src/shared/core.ts` — corrected escape chain to `\\$& → ** → * → ?` order (was incorrectly trying to un-escape already-escaped `\\*\\*`). |
+| SR-5 | Glob path traversal in MCP `searchFiles` | **FIXED** | `mcp-server/src/tools/searchFiles.ts` — all glob results filtered to sandbox via `normalized.startsWith(allowedRoot + sep)` before use. |
+
+### Medium (P2) — 12 issues
+
+| # | Issue | Status | Notes |
+|---|-------|--------|-------|
+| SR-6 | No structured logger in MCP server | **FIXED** | Created `mcp-server/src/logger.ts` with pino (writes to stderr to avoid polluting stdio MCP transport); replaced all `console.error`/`console.log` in `server.ts` and `index.ts`; pino added as dependency. |
+| SR-7 | Dead `DEV_DISABLE_SANDBOX` production guard | **FIXED** | `src/lib/config/index.ts` — replaced no-op empty block with `throw new Error(...)` (skipped during build phase only). |
+| SR-8 | `as unknown as` casts bypass validation | **DOCUMENTED** | `src/lib/mcp/client.ts` — added comment explaining all callers route through `toolRouter.ts` which runs Zod validation before reaching `callTool`. No code change needed. |
+| SR-9 | Hardcoded model fallback in `createOrchestrator` | **FIXED** | `src/lib/orchestrator/index.ts` — renamed import to `appConfig` to avoid shadowing; fallback now uses `appConfig.ollamaDefaultModel`. |
+| SR-10 | Unbounded messages array | **FIXED** | `src/app/api/v1/chat/completions/route.ts:49` — added `.max(100)` to Zod schema. |
+| SR-11 | `process.cwd()` fallback exposes server directory | **FIXED** | `src/app/api/v1/files/route.ts:62` — `repo` is now required; returns `MISSING_PARAMETER 400` if absent. |
+| SR-12 | MCP `searchFiles` missing file size guard | **FIXED** | `mcp-server/src/tools/searchFiles.ts:searchInFile` — added `stat.size > 1_048_576` guard before reading. |
+| SR-13 | `as never` cast in MCP server | **FIXED** | `mcp-server/src/server.ts:85` — replaced `'invalid_arguments' as never` with `MCPErrorCodes.INVALID_ARGUMENTS`; added import. |
+| SR-14 | Timeout discards partial search results | **FIXED** | `mcp-server/src/tools/searchFiles.ts` — timeout now sets `truncated = true; break` instead of throwing `SearchTimeoutError`; removed now-unused import. |
+| SR-15 | `chatStream` timeout not cleared in `finally` | **FIXED** | `src/lib/ollama/client.ts` — both `clearTimeout` calls in `try` and `catch` replaced with a single `finally { clearTimeout(timeoutId) }`. |
+| SR-16 | Tool definitions duplicated in MCP server | **FIXED** | `mcp-server/src/tools/index.ts` — inline definitions replaced with imports of per-file `listFilesDefinition`, `readFileDefinition`, `searchFilesDefinition`, `repoOverviewDefinition`. |
+| SR-17 | `shared/` module is dead code in MCP server | **DEFERRED** | Requires choosing between deleting `shared/` or making `tools/*.ts` delegate to it — an architectural decision. Deferred as a dedicated task. |
+
+### Low (P3) — 7 issues
+
+| # | Issue | Status | Notes |
+|---|-------|--------|-------|
+| SR-18 | Duplicate error logs in API routes | **FIXED** | Removed redundant `logger.error(...)` after `logRequestError(ctx, error)` in all 3 routes: `chat/completions/route.ts`, `files/read/route.ts`, `files/route.ts`. |
+| SR-19 | `searchFiles` timeout config not threaded | **FIXED** | `src/lib/tools/core.ts` — imported `config` and changed default param to `config.searchTimeoutMs`. |
+| SR-20 | Unstructured `console.error` in config startup | **ACCEPTED** | Config runs before pino is initialized — `console.error` is unavoidable here. Added a comment to explain. |
+| SR-21 | Silent `catch` blocks in MCP tools | **FIXED** | `mcp-server/src/tools/listFiles.ts`, `repoOverview.ts`, `searchFiles.ts` — all bare `catch` blocks now log at `logger.debug` with `{ err, path }`. |
+| SR-22 | Duplicate null byte check in `pathValidator` | **FIXED** | `mcp-server/src/validation/pathValidator.ts` — removed redundant explicit null-byte check (already covered by `SUSPICIOUS_PATTERNS`). |
+| SR-23 | Duplicate type definitions across tools | **DEFERRED** | Consolidating tool types into `shared/types.ts` is coupled to SR-17 (dead `shared/` question) — deferred together. |
+| SR-24 | Hardcoded version `'0.1.0'` in MCP server | **FIXED** | `mcp-server/src/server.ts` — version read from `package.json` via `createRequire`. |
+| SR-25 | Dead `FlowNode`/`FlowArrow` components | **FIXED** | `src/app/how-it-works/page.tsx` — removed both unused component definitions (~35 lines). |

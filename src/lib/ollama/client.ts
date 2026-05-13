@@ -255,9 +255,7 @@ export class OllamaClient {
           // Ignore parse errors for incomplete data
         }
       }
-      clearTimeout(timeoutId);
     } catch (error) {
-      clearTimeout(timeoutId);
       if (error instanceof DOMException && error.name === 'AbortError') {
         throw new AppError(
           ErrorCodes.STREAM_INTERRUPTED,
@@ -265,6 +263,8 @@ export class OllamaClient {
         );
       }
       throw normalizeOllamaError(error);
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 

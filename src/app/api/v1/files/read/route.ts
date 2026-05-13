@@ -148,8 +148,6 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    logger.error({ error: error instanceof Error ? error.message : 'Unknown error', request_id: ctx.requestId }, 'File read error');
-
     return errorResponse(
       ErrorCodes.INTERNAL_ERROR,
       error instanceof Error ? error.message : 'Internal server error',

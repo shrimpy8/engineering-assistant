@@ -54,11 +54,6 @@ export class PathValidator {
       }
     }
 
-    // Check for null bytes (injection attack)
-    if (inputPath.includes('\0')) {
-      throw new AccessDeniedError(inputPath, 'Path contains null byte');
-    }
-
     // Check ~ and $ only at path-segment boundaries (not mid-filename)
     if (/(?:^|[/\\])~/.test(inputPath) || /(?:^|[/\\])\$/.test(inputPath)) {
       throw new AccessDeniedError(inputPath, 'Path contains suspicious leading character');

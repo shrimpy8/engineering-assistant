@@ -150,8 +150,16 @@ export async function readFile(
       }
     }
 
-    // Read file content
-    const buffer = await fs.readFile(filePath);
+    // Read only the bytes we need — avoids loading a multi-GB file for a 100-byte request
+    const handle = await fs.open(filePath, 'r');
+    let buffer: Buffer;
+    try {
+      const readSize = Math.min(stat.size, effectiveMaxSize);
+      buffer = Buffer.alloc(readSize);
+      await handle.read(buffer, 0, readSize, 0);
+    } finally {
+      await handle.close();
+    }
 
     // Check for binary content
     if (params.encoding === 'utf-8' && isBinaryContent(buffer)) {

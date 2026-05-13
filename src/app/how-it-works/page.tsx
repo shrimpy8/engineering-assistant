@@ -492,44 +492,6 @@ export default function HowItWorksPage() {
   );
 }
 
-// Component: Flow Node
-function FlowNode({ icon, title, subtitle, color, small }: {
-  icon: string;
-  title: string;
-  subtitle: string;
-  color: 'blue' | 'purple' | 'green';
-  small?: boolean;
-}) {
-  const colors = {
-    blue: 'from-blue-500/20 to-blue-600/10 border-blue-500/30',
-    purple: 'from-purple-500/20 to-purple-600/10 border-purple-500/30',
-    green: 'from-green-500/20 to-green-600/10 border-green-500/30',
-  };
-
-  return (
-    <div className={`
-      ${small ? 'px-3 py-2' : 'px-4 py-3'}
-      rounded-xl bg-gradient-to-br ${colors[color]} border
-      text-center min-w-[100px]
-    `}>
-      <div className={`${small ? 'text-xl' : 'text-2xl'} mb-1`}>{icon}</div>
-      <div className={`${small ? 'text-xs' : 'text-sm'} font-bold text-[var(--color-text-primary)]`}>{title}</div>
-      <div className={`${small ? 'text-[10px]' : 'text-xs'} font-medium text-[var(--color-text-tertiary)]`}>{subtitle}</div>
-    </div>
-  );
-}
-
-// Component: Flow Arrow
-function FlowArrow() {
-  return (
-    <div className="text-[var(--color-text-tertiary)] hidden md:block">
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-      </svg>
-    </div>
-  );
-}
-
 // Component: Concept Card
 function ConceptCard({ icon, title, description, highlight, color }: {
   icon: string;

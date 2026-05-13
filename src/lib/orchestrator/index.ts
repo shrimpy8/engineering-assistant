@@ -25,7 +25,7 @@ import {
   type ToolEventEmitter,
 } from './toolRouter';
 import { logger } from '@/lib/logger';
-import { config } from '@/lib/config';
+import { config as appConfig } from '@/lib/config';
 
 // =============================================================================
 // Types
@@ -105,7 +105,7 @@ export class Orchestrator {
       ...orchestratorConfig,
     };
 
-    this.ollamaClient = new OllamaClient({ baseUrl: config.ollamaBaseUrl });
+    this.ollamaClient = new OllamaClient({ baseUrl: appConfig.ollamaBaseUrl });
     this.promptBuilder = createPromptBuilder({
       repoPath: orchestratorConfig.repoPath,
       toolMode: orchestratorConfig.toolMode,
@@ -483,11 +483,9 @@ Now provide a helpful summary of what you found.`,
    * Clean up resources
    */
   async cleanup(): Promise<void> {
-    if (this.mcpClient) {
-      await this.mcpClient.disconnect();
-      this.mcpClient = null;
-      this.toolRouter = null;
-    }
+    // Don't disconnect pooled clients — they're shared across requests.
+    this.mcpClient = null;
+    this.toolRouter = null;
   }
 }
 
@@ -502,7 +500,7 @@ export function createOrchestrator(
   config: Partial<OrchestratorConfig> & { model?: string }
 ): Orchestrator {
   return new Orchestrator({
-    model: config.model || 'llama3.1:8b',
+    model: config.model || appConfig.ollamaDefaultModel,
     repoPath: config.repoPath,
     toolMode: config.toolMode || 'auto',
     temperature: config.temperature,

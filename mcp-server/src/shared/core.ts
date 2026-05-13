@@ -115,6 +115,18 @@ export async function listFiles(
   const files: FileEntry[] = [];
   let truncated = false;
 
+  // Compile pattern regex once before the walk (avoids recompilation per entry)
+  let patternRegex: RegExp | undefined;
+  if (params.pattern) {
+    if (params.pattern.length > 200) throw new Error('Pattern too long');
+    const escaped = params.pattern
+      .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+      .replace(/\*\*/g, '.*')
+      .replace(/\*/g, '[^/]*')
+      .replace(/\?/g, '.');
+    patternRegex = new RegExp(`^${escaped}$`);
+  }
+
   async function walkDir(dirPath: string, depth: number): Promise<void> {
     if (depth > maxDepth || files.length >= MAX_FILES) {
       truncated = files.length >= MAX_FILES;
@@ -141,15 +153,7 @@ export async function listFiles(
         if (EXCLUDED_EXTENSIONS.has(ext)) continue;
 
         // Apply pattern filter if provided
-        if (params.pattern) {
-          const escaped = params.pattern
-            .replace(/[.+^${}()|[\]\\]/g, '\\$&')
-            .replace(/\*\*/g, '.*')
-            .replace(/\*/g, '[^/]*')
-            .replace(/\?/g, '.');
-          const regex = new RegExp(`^${escaped}$`);
-          if (!regex.test(entry.name)) continue;
-        }
+        if (patternRegex && !patternRegex.test(entry.name)) continue;
 
         const entryPath = path.join(dirPath, entry.name);
         const relativePath = path.relative(repoRoot, entryPath);
@@ -290,9 +294,9 @@ export async function searchFiles(
             const relativePath = path.relative(repoRoot, entryPath);
             const safeGlob = params.glob
               .replace(/[.+^${}()|[\]\\]/g, '\\$&')
-              .replace(/\\\*\\\*/g, '.*')
-              .replace(/\\\*/g, '[^/]*')
-              .replace(/\\\?/g, '.');
+              .replace(/\*\*/g, '.*')
+              .replace(/\*/g, '[^/]*')
+              .replace(/\?/g, '.');
             const globRegex = new RegExp(`^${safeGlob}$`);
             if (!globRegex.test(relativePath)) continue;
           }

@@ -105,6 +105,8 @@ export class MCPClient extends EventEmitter {
     try {
       let result: ToolResult;
 
+      // The `as unknown as *Params` casts are safe here: all callers go through
+      // toolRouter.ts which validates args with Zod before reaching callTool.
       switch (toolName) {
         case 'list_files':
           result = await listFiles(args as unknown as ListFilesParams, this.repoRoot);

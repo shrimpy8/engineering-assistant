@@ -11,6 +11,7 @@ import { glob } from 'glob';
 import { PathValidator } from '../validation/pathValidator.js';
 import { validateListFilesArgs } from '../validation/inputValidator.js';
 import { DirectoryNotFoundError, toMCPError } from '../errors/index.js';
+import { logger } from '../logger.js';
 
 /**
  * File entry in list results
@@ -96,8 +97,8 @@ export async function listFiles(
             size: fileStat.isFile() ? fileStat.size : undefined,
             modified_at: fileStat.mtime.toISOString(),
           } as FileEntry;
-        } catch {
-          // If we can't stat a file, include it with minimal info
+        } catch (err) {
+          logger.debug({ err, path: filePath }, 'Skipping inaccessible file');
           return {
             path: validator.toRelative(filePath),
             type: 'file',
