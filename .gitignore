@@ -68,6 +68,7 @@ CLAUDE.md
 listofprojecttotest.txt
 
 # Internal PRDs and analysis docs
+docs/ISSUE_FIXES.md
 docs/engineering-assistant-prd-v1.4.md
 docs/PRD-*.md
 docs/prd-v1.4-gap-analysis-*.md
