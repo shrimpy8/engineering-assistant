@@ -3,6 +3,11 @@
  *
  * Core tool logic shared between MCP client and server.
  * Based on PRD v1.4 Section 7.2
+ *
+ * SYNC: This file is mirrored in mcp-server/src/shared/core.ts.
+ * After editing, verify both files are in sync:
+ *   diff src/lib/tools/core.ts mcp-server/src/shared/core.ts
+ * Last verified: 2026-05-13
  */
 
 import * as fs from 'fs/promises';
@@ -137,9 +142,12 @@ export async function listFiles(
 
         // Apply pattern filter if provided
         if (params.pattern) {
-          const regex = new RegExp(
-            params.pattern.replace(/\*/g, '.*').replace(/\?/g, '.')
-          );
+          const escaped = params.pattern
+            .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+            .replace(/\*\*/g, '.*')
+            .replace(/\*/g, '[^/]*')
+            .replace(/\?/g, '.');
+          const regex = new RegExp(`^${escaped}$`);
           if (!regex.test(entry.name)) continue;
         }
 
@@ -233,7 +241,8 @@ export async function readFile(
  */
 export async function searchFiles(
   params: SearchFilesParams,
-  repoRoot: string
+  repoRoot: string,
+  timeoutMs: number = 30000
 ): Promise<SearchFilesResult> {
   const startTime = Date.now();
   const maxResults = params.max_results ?? MAX_SEARCH_RESULTS;
@@ -264,6 +273,11 @@ export async function searchFiles(
           return;
         }
 
+        if (Date.now() - startTime > timeoutMs) {
+          truncated = true;
+          return;
+        }
+
         if (entry.name.startsWith('.') || EXCLUDED_DIRS.has(entry.name)) continue;
 
         const entryPath = path.join(dirPath, entry.name);
@@ -274,18 +288,20 @@ export async function searchFiles(
           // Apply glob filter if provided
           if (params.glob) {
             const relativePath = path.relative(repoRoot, entryPath);
-            const globRegex = new RegExp(
-              params.glob
-                .replace(/\*\*/g, '.*')
-                .replace(/\*/g, '[^/]*')
-                .replace(/\?/g, '.')
-            );
+            const safeGlob = params.glob
+              .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+              .replace(/\\\*\\\*/g, '.*')
+              .replace(/\\\*/g, '[^/]*')
+              .replace(/\\\?/g, '.');
+            const globRegex = new RegExp(`^${safeGlob}$`);
             if (!globRegex.test(relativePath)) continue;
           }
 
           filesSearched++;
 
           try {
+            const fileStat = await fs.stat(entryPath);
+            if (fileStat.size > 1_048_576) continue; // Skip files > 1MB
             const content = await fs.readFile(entryPath, 'utf-8');
             const lines = content.split('\n');
 

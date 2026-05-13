@@ -12,6 +12,7 @@ import * as path from 'path';
 import { z } from 'zod';
 import { createResponseContext, successResponse, errorResponse } from '@/lib/api';
 import { logRequestStart, logRequestEnd, logRequestError } from '@/lib/api/logging';
+import { logger } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
 import { ErrorCodes } from '@/lib/errors/codes';
 import { validateRepoPath } from '@/lib/api/validation';
@@ -147,7 +148,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    console.error('File read error:', error);
+    logger.error({ error: error instanceof Error ? error.message : 'Unknown error', request_id: ctx.requestId }, 'File read error');
 
     return errorResponse(
       ErrorCodes.INTERNAL_ERROR,

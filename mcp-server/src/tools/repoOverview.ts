@@ -94,8 +94,8 @@ async function buildTree(
         continue;
       }
 
-      // Skip hidden files/dirs at root level
-      if (entry.name.startsWith('.') && depth === 0) {
+      // Skip hidden files/dirs at all depths for consistency
+      if (entry.name.startsWith('.')) {
         continue;
       }
 

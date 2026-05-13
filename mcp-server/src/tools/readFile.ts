@@ -51,7 +51,7 @@ const BINARY_EXTENSIONS = new Set([
   '.ico',
   '.webp',
   '.bmp',
-  '.svg', // Usually text but can have issues
+  // .svg removed — SVG is XML text and is readable as utf-8
   '.pdf',
   '.zip',
   '.tar',

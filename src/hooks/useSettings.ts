@@ -140,6 +140,7 @@ export function useSettings(): UseSettingsReturn {
         }
       }
     } catch (error) {
+      // TODO(3): Route to client-side error reporter when observability is added
       console.error('Failed to load settings:', error);
     }
   }, [validateRepoPath]);
@@ -149,6 +150,7 @@ export function useSettings(): UseSettingsReturn {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
     } catch (error) {
+      // TODO(3): Route to client-side error reporter when observability is added
       console.error('Failed to save settings:', error);
     }
   }, [settings]);
@@ -190,6 +192,7 @@ export function useSettings(): UseSettingsReturn {
       }
     } catch (error) {
       setModelsError('Failed to connect to server');
+      // TODO(3): Route to client-side error reporter when observability is added
       console.error('Failed to fetch models:', error);
     } finally {
       setIsLoadingModels(false);

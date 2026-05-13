@@ -10,6 +10,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import type { ToolDefinition, ToolName } from '@/lib/mcp/types';
+import { createModuleLogger } from '@/lib/logger';
+
+const log = createModuleLogger('prompt-builder');
 
 // =============================================================================
 // External Prompt Loading
@@ -184,10 +187,10 @@ When you get tool results, summarize them clearly for the user.`;
 function getBaseSystemPrompt(): string {
   const externalPrompt = loadExternalPrompt();
   if (externalPrompt) {
-    console.log('[PromptBuilder] Loaded system prompt from external file');
+    log.info('Loaded system prompt from external file');
     return externalPrompt;
   }
-  console.log('[PromptBuilder] Using fallback system prompt');
+  log.info('Using fallback system prompt');
   return FALLBACK_SYSTEM_PROMPT;
 }
 

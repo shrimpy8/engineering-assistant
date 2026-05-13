@@ -10,6 +10,7 @@
 import { createModuleLogger } from '../logger';
 import { AppError, ErrorCodes } from '../errors';
 import { normalizeOllamaError } from '../errors/handlers';
+import { config as appConfig } from '../config';
 import type {
   OllamaModel,
   OllamaListModelsResponse,
@@ -32,13 +33,13 @@ interface OllamaClientConfig {
 }
 
 /**
- * Default configuration loaded from environment
+ * Default configuration loaded from centralized app config
  */
 function getDefaultConfig(): OllamaClientConfig {
   return {
-    baseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
-    timeoutMs: parseInt(process.env.OLLAMA_TIMEOUT_MS || '60000', 10),
-    maxRetries: parseInt(process.env.OLLAMA_MAX_RETRIES || '3', 10),
+    baseUrl: appConfig.ollamaBaseUrl,
+    timeoutMs: appConfig.ollamaTimeoutMs,
+    maxRetries: appConfig.ollamaMaxRetries,
   };
 }
 
@@ -181,6 +182,7 @@ export class OllamaClient {
   ): AsyncGenerator<OllamaStreamChunk> {
     const url = `${this.config.baseUrl}/api/chat`;
     const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.config.timeoutMs);
 
     log.info({ model: request.model }, 'Starting streaming chat');
 
@@ -253,7 +255,9 @@ export class OllamaClient {
           // Ignore parse errors for incomplete data
         }
       }
+      clearTimeout(timeoutId);
     } catch (error) {
+      clearTimeout(timeoutId);
       if (error instanceof DOMException && error.name === 'AbortError') {
         throw new AppError(
           ErrorCodes.STREAM_INTERRUPTED,
@@ -274,6 +278,8 @@ export class OllamaClient {
     log.info({ model: modelName }, 'Pulling model');
 
     try {
+      const pullController = new AbortController();
+      const pullTimeoutId = setTimeout(() => pullController.abort(), 600000); // 10 min max
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -283,6 +289,7 @@ export class OllamaClient {
           name: modelName,
           stream: true,
         }),
+        signal: pullController.signal,
       });
 
       if (!response.ok) {
@@ -321,6 +328,7 @@ export class OllamaClient {
         }
       }
 
+      clearTimeout(pullTimeoutId);
       log.info({ model: modelName }, 'Model pull completed');
     } catch (error) {
       throw normalizeOllamaError(error);

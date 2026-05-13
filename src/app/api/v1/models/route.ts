@@ -8,8 +8,7 @@
  */
 
 import { NextRequest } from 'next/server';
-import { OllamaClient } from '@/lib/ollama/client';
-import { config } from '@/lib/config';
+import { ollamaClient } from '@/lib/ollama/client';
 import { createResponseContext, successResponse, errorResponse } from '@/lib/api';
 import { logRequestStart, logRequestEnd, logRequestError } from '@/lib/api/logging';
 import { ErrorCodes } from '@/lib/errors/codes';
@@ -38,8 +37,7 @@ export async function GET(request: NextRequest) {
   logRequestStart(ctx, request);
 
   try {
-    const ollama = new OllamaClient({ baseUrl: config.ollamaBaseUrl });
-    const ollamaModels = await ollama.listModels();
+    const ollamaModels = await ollamaClient.listModels();
 
     const models: Model[] = ollamaModels.map((model) => ({
       name: model.name,

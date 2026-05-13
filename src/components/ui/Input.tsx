@@ -13,7 +13,7 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
  */
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ error, label, className = '', id, ...props }, ref) => {
-    const inputId = id || `input-${Math.random().toString(36).slice(2, 9)}`;
+    const inputId = id || `input-${crypto.randomUUID().replace(/-/g, '').substring(0, 8)}`;
 
     return (
       <div className="flex flex-col gap-1 w-full">

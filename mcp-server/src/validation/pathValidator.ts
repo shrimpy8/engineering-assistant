@@ -14,7 +14,8 @@ import { AccessDeniedError } from '../errors/index.js';
 /**
  * Suspicious patterns that indicate potential path traversal attempts
  */
-const SUSPICIOUS_PATTERNS = ['..', '~', '$', '`', '\0', '%2e', '%2f', '%5c'];
+// ~ and $ are checked positionally below to avoid false-positives on filenames like "backup~" or "jquery.min$.js"
+const SUSPICIOUS_PATTERNS = ['..', '`', '\0', '%2e', '%2f', '%5c'];
 
 /**
  * Path validator for sandboxed file system access
@@ -56,6 +57,11 @@ export class PathValidator {
     // Check for null bytes (injection attack)
     if (inputPath.includes('\0')) {
       throw new AccessDeniedError(inputPath, 'Path contains null byte');
+    }
+
+    // Check ~ and $ only at path-segment boundaries (not mid-filename)
+    if (/(?:^|[/\\])~/.test(inputPath) || /(?:^|[/\\])\$/.test(inputPath)) {
+      throw new AccessDeniedError(inputPath, 'Path contains suspicious leading character');
     }
   }
 
