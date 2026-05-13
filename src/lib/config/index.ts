@@ -172,8 +172,8 @@ function loadConfig(): Config {
       .map((issue) => `  - ${issue.path.join('.')}: ${issue.message}`)
       .join('\n');
 
-    console.error('Configuration validation failed:');
-    console.error(formattedErrors);
+    // Pre-logger bootstrap: pino is not yet initialized here (circular dependency)
+    console.error('Configuration validation failed:\n' + formattedErrors);
 
     throw new ConfigurationError(
       'Invalid configuration. Check the errors above.',
@@ -185,6 +185,7 @@ function loadConfig(): Config {
 
   // Safety check: DEV_DISABLE_SANDBOX cannot be true in production (warn but don't fail during build)
   if (config.devDisableSandbox && config.nodeEnv === 'production') {
+    // Pre-logger bootstrap: pino is not yet initialized here (circular dependency)
     console.warn(
       'WARNING: DEV_DISABLE_SANDBOX is enabled in production environment. This is a security risk!'
     );

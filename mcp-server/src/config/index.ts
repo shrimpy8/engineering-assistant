@@ -39,8 +39,8 @@ function loadConfig(): MCPServerConfig {
   const result = MCPConfigSchema.safeParse(env);
 
   if (!result.success) {
-    console.error('MCP Server configuration error:');
-    console.error(result.error.format());
+    // Pre-logger bootstrap: pino is not yet initialized here (circular dependency)
+    console.error('MCP Server configuration error:', result.error.format());
     throw new Error('Invalid MCP server configuration');
   }
 

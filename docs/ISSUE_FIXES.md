@@ -1267,3 +1267,51 @@ export const toolDefinitions = [
 | SR-23 | Duplicate type definitions across tools | **DEFERRED** | Consolidating tool types into `shared/types.ts` is coupled to SR-17 (dead `shared/` question) — deferred together. |
 | SR-24 | Hardcoded version `'0.1.0'` in MCP server | **FIXED** | `mcp-server/src/server.ts` — version read from `package.json` via `createRequire`. |
 | SR-25 | Dead `FlowNode`/`FlowArrow` components | **FIXED** | `src/app/how-it-works/page.tsx` — removed both unused component definitions (~35 lines). |
+
+---
+
+### Second Review — Verification
+
+**Verified by:** Claude Opus on 2026-05-13
+**Result:** 19/24 PASS — 5 items need attention
+
+#### Verified PASS (19 items)
+
+| SR | Status |
+|----|--------|
+| SR-1 | PASS — `cleanup()` nulls refs without `disconnect()` |
+| SR-2 | PASS — regex compiled once before walk, 200-char cap present |
+| SR-3 | PASS — `fs.open` + `handle.read` with `readSize` bytes |
+| SR-5 | PASS — glob results filtered with `normalized.startsWith(allowedRoot + sep)` |
+| SR-7 | PASS — throws error in production |
+| SR-8 | PASS — documenting comment added |
+| SR-9 | PASS — uses `appConfig.ollamaDefaultModel` |
+| SR-10 | PASS — `.max(100)` constraint added |
+| SR-11 | PASS — returns 400 error when `repo` missing |
+| SR-12 | PASS — `fs.stat` + 1MB skip guard added |
+| SR-13 | PASS — uses `MCPErrorCodes.INVALID_ARGUMENTS` enum |
+| SR-14 | PASS — sets `truncated = true` and breaks |
+| SR-15 | PASS — `clearTimeout` consolidated in `finally` block |
+| SR-16 | PASS — imports per-file definitions |
+| SR-18 | PASS — duplicate `logger.error` calls removed |
+| SR-19 | PASS — uses `config.searchTimeoutMs` |
+| SR-22 | PASS — duplicate null byte check removed |
+| SR-24 | PASS — version read from `package.json` |
+| SR-25 | PASS — `FlowNode`/`FlowArrow` components removed |
+
+#### Remaining Issues (5 items — need follow-up fixes)
+
+##### SR-4 (P1): Glob escaping order STILL broken in `mcp-server/src/shared/core.ts`
+- **Status:** RESOLVED — `mcp-server/src/shared/` deleted entirely (SR-17). Dead code gone; issue moot.
+
+##### SR-6 (P2): `mcp-server/src/config/index.ts` still uses `console.error`
+- **Status:** FIXED — consolidated to single `console.error(...)` call with a comment explaining the circular dependency (logger not yet initialized at config-load time).
+
+##### SR-17 (P2): `mcp-server/src/shared/` directory still exists as dead code
+- **Status:** FIXED — deleted `mcp-server/src/shared/` directory entirely. No file in `mcp-server/src/` imported from it. Also resolves SR-4 and SR-21 (both were in `shared/core.ts`).
+
+##### SR-20 (P3): `src/lib/config/index.ts` — `console.error`/`console.warn` still unstructured
+- **Status:** FIXED — added `// Pre-logger bootstrap: pino is not yet initialized here (circular dependency)` comment above all three `console.error`/`console.warn` calls at lines 175, 188, and 199.
+
+##### SR-21 (P3): `mcp-server/src/shared/core.ts:174` catch block still silent
+- **Status:** RESOLVED — `mcp-server/src/shared/` deleted entirely (SR-17). Dead code gone; issue moot.
