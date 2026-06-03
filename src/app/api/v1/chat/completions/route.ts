@@ -158,7 +158,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       );
     }
 
-    const { messages, stream, settings } = parseResult.data;
+    const { messages: rawMessages, stream, settings } = parseResult.data;
     const {
       model,
       repo_path,
@@ -166,6 +166,22 @@ export async function POST(request: NextRequest): Promise<Response> {
       max_tokens,
       tool_mode,
     } = settings;
+
+    // Only user and assistant messages accepted from clients.
+    // Strip system/tool messages to prevent callers from injecting system
+    // instructions or forging tool outputs into the conversation history.
+    const messages = rawMessages.filter(
+      (m) => m.role === 'user' || m.role === 'assistant'
+    );
+
+    if (messages.length === 0) {
+      return errorResponse(
+        ErrorCodes.INVALID_REQUEST,
+        'At least one user or assistant message is required',
+        ctx,
+        { details: [{ field: 'messages', code: 'too_small', message: 'No user or assistant messages after filtering system/tool roles' }] }
+      );
+    }
 
     const modelName = model || config.ollamaDefaultModel;
     const normalizedRepoPath = repo_path ? await validateRepoPath(repo_path) : undefined;

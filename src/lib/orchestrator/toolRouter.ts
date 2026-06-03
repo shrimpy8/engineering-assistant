@@ -15,7 +15,7 @@ import type {
   ToolCallStatus,
 } from '@/lib/mcp/types';
 import { logger } from '@/lib/logger';
-import { isValidToolName } from './promptBuilder';
+import { isValidToolName, escapeXmlClosingTags } from './promptBuilder';
 
 // Runtime validation schemas for LLM-generated tool arguments
 const ListFilesSchema = z.object({
@@ -334,20 +334,34 @@ export class ToolRouter {
   }
 
   /**
-   * Format tool results for injection into conversation
-   * Uses a human-readable format to discourage JSON mimicry
+   * Format tool results as a user-role message for injection into the conversation.
+   *
+   * Each result is wrapped in <tool_result tool="...">...</tool_result> XML
+   * delimiters so the model treats the content as untrusted data, not
+   * instructions. The envelope makes it clear where tool output starts/ends,
+   * which limits prompt-injection surface from repository-controlled content.
+   *
+   * Returns a user-role message object ready to be appended to the messages
+   * array before the next LLM call.
    */
-  formatToolResultsForLLM(results: ToolCallResult[]): string {
-    return results
-      .map((result) => {
-        if (result.status === 'error') {
-          return `[Tool Error] ${result.name}: ${result.error?.message}`;
-        }
+  formatToolResultsForLLM(results: ToolCallResult[]): { role: 'user'; content: string } {
+    const parts = results.map((result) => {
+      const toolName = result.name;
+      let inner: string;
 
-        // Format results in a readable way based on tool type
-        return this.formatToolResultReadable(result.name, result.result);
-      })
-      .join('\n\n---\n\n');
+      if (result.status === 'error') {
+        inner = `[Tool Error] ${result.name}: ${result.error?.message}`;
+      } else {
+        inner = this.formatToolResultReadable(toolName, result.result);
+      }
+
+      return `<tool_result tool="${toolName}">\n${escapeXmlClosingTags(inner)}\n</tool_result>`;
+    });
+
+    return {
+      role: 'user',
+      content: parts.join('\n\n'),
+    };
   }
 
   /**

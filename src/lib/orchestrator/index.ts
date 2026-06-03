@@ -199,11 +199,21 @@ export class Orchestrator {
     const systemPrompt = this.promptBuilder.buildSystemPrompt();
     const conversationMessages: OllamaChatMessage[] = [
       { role: 'system', content: systemPrompt },
+    ];
+
+    // Prepend pre-fetched repo overview as a user-role message so repository-derived
+    // content never lives in the system prompt (prompt injection mitigation).
+    const repoOverviewMsg = this.promptBuilder.buildRepoOverviewMessage();
+    if (repoOverviewMsg) {
+      conversationMessages.push(repoOverviewMsg);
+    }
+
+    conversationMessages.push(
       ...messages.map((m) => ({
         role: m.role as 'system' | 'user' | 'assistant',
         content: m.content,
-      })),
-    ];
+      }))
+    );
 
     let totalPromptTokens = 0;
     let totalCompletionTokens = 0;
@@ -232,19 +242,17 @@ export class Orchestrator {
           const results = await this.toolRouter.executeToolCalls(toolCalls);
           toolRounds++;
 
-          // Add tool results to conversation
-          const toolResultContent = this.toolRouter.formatToolResultsForLLM(results);
+          // Add tool results to conversation as XML-delimited user message.
+          // Tool/repo content must never be injected as raw strings to prevent
+          // prompt injection from repository-controlled content.
+          const toolResultMessage = this.toolRouter.formatToolResultsForLLM(results);
           conversationMessages.push({
             role: 'assistant',
             content: response.message?.content || '',
           });
           conversationMessages.push({
-            role: 'user',
-            content: `Here are the results from the tools you called. Please summarize these results in a clear, human-readable way to answer my question. Do NOT describe the JSON structure or explain how to parse it - just tell me what was found.
-
-${toolResultContent}
-
-Now provide a helpful summary of what you found.`,
+            role: toolResultMessage.role,
+            content: `${toolResultMessage.content}\n\nPlease summarize these tool results in a clear, human-readable way to answer my question. Do NOT describe the JSON structure or explain how to parse it - just tell me what was found.`,
           });
 
           // Continue loop to get LLM response to tool results
@@ -311,11 +319,21 @@ Now provide a helpful summary of what you found.`,
     const systemPrompt = this.promptBuilder.buildSystemPrompt();
     const conversationMessages: OllamaChatMessage[] = [
       { role: 'system', content: systemPrompt },
+    ];
+
+    // Prepend pre-fetched repo overview as a user-role message so repository-derived
+    // content never lives in the system prompt (prompt injection mitigation).
+    const repoOverviewMsgChat = this.promptBuilder.buildRepoOverviewMessage();
+    if (repoOverviewMsgChat) {
+      conversationMessages.push(repoOverviewMsgChat);
+    }
+
+    conversationMessages.push(
       ...messages.map((m) => ({
         role: m.role as 'system' | 'user' | 'assistant',
         content: m.content,
-      })),
-    ];
+      }))
+    );
 
     const allToolCalls: ToolCallResult[] = [];
     let totalPromptTokens = 0;
@@ -343,19 +361,17 @@ Now provide a helpful summary of what you found.`,
         allToolCalls.push(...results);
         toolRounds++;
 
-        // Add tool results to conversation
-        const toolResultContent = this.toolRouter.formatToolResultsForLLM(results);
+        // Add tool results to conversation as XML-delimited user message.
+        // Tool/repo content must never be injected as raw strings to prevent
+        // prompt injection from repository-controlled content.
+        const toolResultMessage = this.toolRouter.formatToolResultsForLLM(results);
         conversationMessages.push({
           role: 'assistant',
           content: response.message?.content || '',
         });
         conversationMessages.push({
-          role: 'user',
-          content: `Here are the results from the tools you called. Please summarize these results in a clear, human-readable way to answer my question. Do NOT describe the JSON structure or explain how to parse it - just tell me what was found.
-
-${toolResultContent}
-
-Now provide a helpful summary of what you found.`,
+          role: toolResultMessage.role,
+          content: `${toolResultMessage.content}\n\nPlease summarize these tool results in a clear, human-readable way to answer my question. Do NOT describe the JSON structure or explain how to parse it - just tell me what was found.`,
         });
 
         continue;
