@@ -27,17 +27,17 @@ export async function validateRepoPath(repoPath: string): Promise<string> {
 
   const resolved = path.resolve(repoPath);
 
-  if (config.allowedRepoRoot) {
-    const allowedRoot = path.resolve(config.allowedRepoRoot);
-    const relative = path.relative(allowedRoot, resolved);
+  // When ALLOWED_REPO_ROOT is not set, default to process.cwd() so the server
+  // cannot be pointed at arbitrary host paths (e.g. /etc, $HOME).
+  const allowedRoot = path.resolve(config.allowedRepoRoot ?? process.cwd());
+  const relative = path.relative(allowedRoot, resolved);
 
-    if (relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
-      throw new AppError(
-        ErrorCodes.REPO_PATH_INVALID,
-        `Repository must be inside ${allowedRoot}`,
-        { param: 'repo_path' }
-      );
-    }
+  if (relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+    throw new AppError(
+      ErrorCodes.REPO_PATH_INVALID,
+      `Repository must be inside ${allowedRoot}`,
+      { param: 'repo_path' }
+    );
   }
 
   const stat = await fs.stat(resolved).catch(() => null);

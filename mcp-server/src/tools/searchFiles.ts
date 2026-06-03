@@ -117,6 +117,27 @@ async function searchInFile(
 }
 
 /**
+ * Maximum allowed length for a user-supplied regex pattern.
+ * Patterns longer than this are rejected before compilation.
+ */
+const MAX_REGEX_PATTERN_LENGTH = 200;
+
+/**
+ * Heuristic check for catastrophic backtracking indicators.
+ *
+ * Rejects patterns that contain nested quantifiers — the most common cause of
+ * ReDoS. Specifically rejects any of:  (+)+  (*)+  (+)*  (*)*
+ * (with optional non-capturing group wrappers in between).
+ *
+ * This is intentionally conservative: it may reject some safe patterns,
+ * but it prevents CPU exhaustion before any file is touched.
+ */
+function hasCatastrophicBacktracking(pattern: string): boolean {
+  // Nested quantifiers: e.g. (a+)+, (.+)+, (a*)+, (a+)*, (a*)*, (.*)* etc.
+  return /[+*]\)+[+*]/.test(pattern);
+}
+
+/**
  * Execute search_files tool
  */
 export async function searchFiles(
@@ -135,7 +156,30 @@ export async function searchFiles(
     let regex: RegExp;
     const flags = params.case_sensitive ? '' : 'i';
     if (params.is_regex) {
-      regex = new RegExp(params.pattern, flags);
+      // Guard against ReDoS before compiling the pattern.
+      if (params.pattern.length > MAX_REGEX_PATTERN_LENGTH) {
+        throw new MCPError(
+          MCPErrorCodes.INVALID_ARGUMENTS,
+          `Regex pattern too long (max ${MAX_REGEX_PATTERN_LENGTH} characters)`,
+          { pattern_length: params.pattern.length }
+        );
+      }
+      if (hasCatastrophicBacktracking(params.pattern)) {
+        throw new MCPError(
+          MCPErrorCodes.INVALID_ARGUMENTS,
+          'Regex pattern contains nested quantifiers that can cause catastrophic backtracking',
+          { pattern: params.pattern }
+        );
+      }
+      try {
+        regex = new RegExp(params.pattern, flags);
+      } catch (err) {
+        throw new MCPError(
+          MCPErrorCodes.INVALID_ARGUMENTS,
+          `Invalid regex pattern: ${err instanceof Error ? err.message : String(err)}`,
+          { pattern: params.pattern }
+        );
+      }
     } else {
       const escaped = escapeRegex(params.pattern);
       regex = new RegExp(escaped, flags);

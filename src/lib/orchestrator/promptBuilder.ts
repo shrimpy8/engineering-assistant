@@ -15,6 +15,22 @@ import { createModuleLogger } from '@/lib/logger';
 const log = createModuleLogger('prompt-builder');
 
 // =============================================================================
+// XML Safety
+// =============================================================================
+
+/**
+ * Escape closing XML tags that could break out of a wrapper block.
+ *
+ * Repository-derived content may contain strings like `</tool_result>` or
+ * `</repository_overview>` that would prematurely close the enclosing XML
+ * envelope, allowing content to be interpreted outside the untrusted-data
+ * boundary. Replace `</` with `&lt;/` to neutralise all such sequences.
+ */
+export function escapeXmlClosingTags(content: string): string {
+  return content.replace(/<\//g, '&lt;/');
+}
+
+// =============================================================================
 // External Prompt Loading
 // =============================================================================
 
@@ -250,14 +266,9 @@ export class PromptBuilder {
     // Add tool definitions
     parts.push(formatToolsForPrompt(TOOL_DEFINITIONS));
 
-    // Add repo context if available
+    // Add repo context if available (path only — never repo-derived content in system prompt)
     if (this.repoPath) {
       parts.push(`## Current Repository\n\nYou are analyzing: \`${this.repoPath}\``);
-
-      // Include pre-fetched repo overview for context
-      if (this.repoOverview) {
-        parts.push(`## Repository Structure (Pre-loaded)\n\nHere is the repository structure you already know about. Use this to inform your tool calls - you don't need to call get_repo_overview again unless the user specifically asks for structure.\n\n${this.repoOverview}`);
-      }
     }
 
     // Add tool mode instructions
@@ -279,6 +290,24 @@ If you need information, suggest which tool to use and let the user confirm.`);
     }
 
     return parts.join('\n\n');
+  }
+
+  /**
+   * Build a user-role message that carries the pre-fetched repo overview.
+   *
+   * Repository-derived content must never appear in the system prompt to avoid
+   * prompt injection via filenames or file contents. Instead, callers should
+   * prepend this message to the conversation before the first user query so the
+   * model treats it as untrusted data, not instructions.
+   *
+   * Returns null when no repoOverview has been set.
+   */
+  buildRepoOverviewMessage(): { role: 'user'; content: string } | null {
+    if (!this.repoOverview) return null;
+    return {
+      role: 'user',
+      content: `<repository_overview>\n${escapeXmlClosingTags(this.repoOverview)}\n</repository_overview>`,
+    };
   }
 
   /**

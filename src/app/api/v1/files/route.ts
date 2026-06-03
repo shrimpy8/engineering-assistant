@@ -78,6 +78,33 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Security: Resolve symlinks and confirm the real path is still inside the
+    // repo root. The lexical check above prevents obvious traversal but cannot
+    // catch symlinks that point outside the sandbox. If the path doesn't exist
+    // yet (ENOENT), we skip the realpath check and let the stat below handle it.
+    try {
+      const realFullPath = await fs.realpath(fullPath);
+      const realRepoRoot = await fs.realpath(repoRoot);
+      const realRelative = path.relative(realRepoRoot, realFullPath);
+      if (
+        realRelative === '..' ||
+        realRelative.startsWith(`..${path.sep}`) ||
+        path.isAbsolute(realRelative)
+      ) {
+        return errorResponse(
+          ErrorCodes.ACCESS_DENIED,
+          'Path traversal not allowed',
+          ctx,
+          { param: 'path' }
+        );
+      }
+    } catch (err) {
+      // ENOENT means the path does not exist — let the stat below return 404.
+      if ((err as NodeJS.ErrnoException).code !== 'ENOENT') {
+        throw err;
+      }
+    }
+
     const stat = await fs.stat(fullPath).catch(() => null);
 
     if (!stat) {

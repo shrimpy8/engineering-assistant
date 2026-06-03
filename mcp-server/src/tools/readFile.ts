@@ -166,11 +166,12 @@ export async function readFile(
       throw new BinaryFileError(params.path);
     }
 
-    // Determine if truncation is needed
-    const truncated = buffer.length > effectiveMaxSize;
-    const contentBuffer = truncated
-      ? buffer.slice(0, effectiveMaxSize)
-      : buffer;
+    // Determine if the file was truncated.
+    // buffer.length already equals Math.min(stat.size, effectiveMaxSize), so
+    // comparing buffer.length > effectiveMaxSize is always false. Use stat.size
+    // instead to correctly reflect whether bytes were omitted.
+    const truncated = stat.size > effectiveMaxSize;
+    const contentBuffer = buffer;
 
     // Encode content
     let content: string;
